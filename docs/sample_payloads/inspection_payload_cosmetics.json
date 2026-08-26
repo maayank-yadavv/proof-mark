@@ -1,0 +1,79 @@
+{
+  "inspectionId": "INSP-2026-MUM-40192",
+  "timestamp": "2026-08-23T11:15:00Z",
+  "inspector": {
+    "officerId": "OFFICER-MUM-108",
+    "name": "Priya Nair",
+    "designation": "Legal Metrology Inspector",
+    "jurisdiction": "Mumbai Suburbs Zone 2",
+    "stationId": "STN-MUM-02"
+  },
+  "product": {
+    "barcode": "8901234567890",
+    "productName": "GlowSkin Hydrating Face Serum 50ml",
+    "brand": "GlowSkin Naturals",
+    "category": "COSMETICS_PERSONAL_CARE",
+    "pdpAreaCm2": 85.0
+  },
+  "extractedPackageData": {
+    "productName": "GlowSkin Hydrating Face Serum 50ml",
+    "manufacturerName": "CosmoBeauty Herbal Products Pvt Ltd",
+    "manufacturerAddress": "Plot 44, MIDC Industrial Area, Andheri East, Mumbai",
+    "netQuantity": "50 ml",
+    "unitSalePrice": "MISSING",
+    "mrp": "MRP Rs 499.00",
+    "dateOfMfg": "07/2026",
+    "countryOfOrigin": "",
+    "consumerCare": "Email: care@glowskin.in",
+    "pdpFontHeightMm": "1.2 mm",
+    "rawOcrText": "GlowSkin Hydrating Face Serum\nNet Qty: 50 ml\nMRP Rs 499.00\nMfd: 07/2026\nMfg by: CosmoBeauty Herbal Products Pvt Ltd, Andheri East, Mumbai\nConsumer Care: care@glowskin.in",
+    "perceptionConfidence": 0.92,
+    "qualityMetrics": {
+      "blurScore": 0.05,
+      "brightnessScore": 0.88,
+      "isBlurry": false,
+      "isLowLight": false,
+      "perspectiveSkewDeg": 0.9
+    }
+  },
+  "complianceEvaluation": {
+    "totalRulesEvaluated": 10,
+    "passCount": 6,
+    "failCount": 4,
+    "overallStatus": "NON_COMPLIANT",
+    "ruleFindings": [
+      {
+        "ruleCode": "LM-PC-6-1-E",
+        "title": "Maximum Retail Price (MRP) Format",
+        "sectionReference": "Rule 6(1)(e) & Sec 36(2)",
+        "status": "POTENTIAL_NON_COMPLIANCE",
+        "findings": "MRP 'MRP Rs 499.00' lacks mandatory tax inclusion clause '(incl. of all taxes)' required by Rule 6(1)(e).",
+        "reasonCode": "TAX_INCLUSION_MISSING"
+      },
+      {
+        "ruleCode": "LM-PC-6-1-DA",
+        "title": "Mandatory Unit Sale Price (USP)",
+        "sectionReference": "Rule 6(1)(da)",
+        "status": "POTENTIAL_NON_COMPLIANCE",
+        "findings": "Unit Sale Price (₹ 9.98 per ml) is completely missing from package declarations.",
+        "reasonCode": "USP_MISSING"
+      },
+      {
+        "ruleCode": "LM-PC-6-10",
+        "title": "Country of Origin Declaration",
+        "sectionReference": "Rule 6(1)(m)",
+        "status": "POTENTIAL_NON_COMPLIANCE",
+        "findings": "Country of Origin statement ('Made in India' or equivalent) is missing.",
+        "reasonCode": "COUNTRY_ORIGIN_MISSING"
+      },
+      {
+        "ruleCode": "LM-PC-7-PDP",
+        "title": "Minimum Height of Numerals & Letters",
+        "sectionReference": "Rule 7 & Table 1",
+        "status": "POTENTIAL_NON_COMPLIANCE",
+        "findings": "Extracted font height 1.2mm is below statutory minimum 2.0mm required for PDP area 85 cm².",
+        "reasonCode": "FONT_HEIGHT_DEFICIENT"
+      }
+    ]
+  }
+}

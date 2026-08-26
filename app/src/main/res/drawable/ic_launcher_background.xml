@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Base Background with Deep Midnight Slate Gradient -->
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="108"
+                android:endY="108"
+                android:type="linear">
+                <item android:color="#070B14" android:offset="0.0" />
+                <item android:color="#0B1528" android:offset="0.45" />
+                <item android:color="#0F2444" android:offset="0.85" />
+                <item android:color="#13315C" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Subtle Radial Ambient Light at Top Center -->
+    <path
+        android:pathData="M54,54 m-42,0 a42,42 0 1,1 84,0 a42,42 0 1,1 -84,0"
+        android:strokeColor="#1000E5FF"
+        android:strokeWidth="1.2" />
+
+    <path
+        android:pathData="M54,54 m-32,0 a32,32 0 1,1 64,0 a32,32 0 1,1 -64,0"
+        android:strokeColor="#0C00E5FF"
+        android:strokeWidth="1" />
+
+    <path
+        android:pathData="M54,54 m-22,0 a22,22 0 1,1 44,0 a22,22 0 1,1 -44,0"
+        android:strokeColor="#0800E5FF"
+        android:strokeWidth="0.8" />
+
+    <!-- Subtle Micro Precision Grid Crosshairs -->
+    <path
+        android:pathData="M54,20 L54,88 M20,54 L88,54"
+        android:strokeColor="#0A38BDF8"
+        android:strokeWidth="0.75" />
+
+</vector>

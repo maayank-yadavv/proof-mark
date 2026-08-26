@@ -1,0 +1,6 @@
+{
+  "name": "Proof Mark",
+  "description": "AI-Powered Legal Metrology Compliance Intelligence Platform for packaged commodity enforcement, OCR extraction, deterministic rules, and evidence audit.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

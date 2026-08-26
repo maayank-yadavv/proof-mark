@@ -1,0 +1,108 @@
+{
+  "inspectionId": "INSP-2026-DEL-89412",
+  "timestamp": "2026-08-23T10:30:00Z",
+  "inspector": {
+    "officerId": "OFFICER-DEL-402",
+    "name": "Rajesh Sharma",
+    "designation": "Senior Legal Metrology Officer",
+    "jurisdiction": "New Delhi North Zone",
+    "stationId": "STN-DEL-04"
+  },
+  "product": {
+    "barcode": "8901030800012",
+    "productName": "Fortune Refined Kachi Ghani Mustard Oil",
+    "brand": "Fortune Oils",
+    "category": "FOOD_BEVERAGES",
+    "pdpAreaCm2": 180.0
+  },
+  "extractedPackageData": {
+    "productName": "Fortune Refined Kachi Ghani Mustard Oil 1L",
+    "manufacturerName": "Adani Wilmar Limited",
+    "manufacturerAddress": "Fortune House, Near Navrangpura, Ahmedabad, Gujarat - 380009",
+    "netQuantity": "1 L / 910 g",
+    "unitSalePrice": "₹ 0.185 / ml",
+    "mrp": "₹ 185.00 (inclusive of all taxes)",
+    "dateOfMfg": "08/2026",
+    "countryOfOrigin": "Made in India",
+    "consumerCare": "Call: 1800-233-0000, Email: care@adaniwilmar.in, Address: Adani Wilmar Ltd, Ahmedabad - 380009",
+    "pdpFontHeightMm": "3.5 mm",
+    "rawOcrText": "FORTUNE KACHI GHANI MUSTARD OIL\nNet Qty: 1 L\nMRP ₹ 185.00 (inclusive of all taxes)\nUSP: ₹ 0.185 / ml\nMfd: 08/2026\nMfd by: Adani Wilmar Limited, Fortune House, Ahmedabad - 380009\nCountry of Origin: India\nConsumer Care: 1800-233-0000 | care@adaniwilmar.in\nFSSAI Lic No: 10012021000071",
+    "perceptionConfidence": 0.96,
+    "qualityMetrics": {
+      "blurScore": 0.08,
+      "brightnessScore": 0.85,
+      "isBlurry": false,
+      "isLowLight": false,
+      "perspectiveSkewDeg": 1.8
+    },
+    "boundingBoxes": [
+      {
+        "fieldKey": "PRODUCT_NAME",
+        "fieldName": "Product Name",
+        "extractedText": "Fortune Refined Kachi Ghani Mustard Oil 1L",
+        "confidence": 0.98,
+        "xMin": 0.12,
+        "yMin": 0.08,
+        "xMax": 0.88,
+        "yMax": 0.22
+      },
+      {
+        "fieldKey": "MRP",
+        "fieldName": "Maximum Retail Price",
+        "extractedText": "MRP ₹ 185.00 (inclusive of all taxes)",
+        "confidence": 0.95,
+        "xMin": 0.15,
+        "yMin": 0.45,
+        "xMax": 0.82,
+        "yMax": 0.52
+      },
+      {
+        "fieldKey": "NET_QTY",
+        "fieldName": "Net Quantity",
+        "extractedText": "Net Qty: 1 L",
+        "confidence": 0.97,
+        "xMin": 0.15,
+        "yMin": 0.35,
+        "xMax": 0.55,
+        "yMax": 0.42
+      }
+    ]
+  },
+  "complianceEvaluation": {
+    "totalRulesEvaluated": 10,
+    "passCount": 10,
+    "failCount": 0,
+    "overallStatus": "COMPLIANT",
+    "ruleFindings": [
+      {
+        "ruleCode": "LM-PC-6-1-A",
+        "title": "Manufacturer / Packer / Importer Details",
+        "sectionReference": "Rule 6(1)(a) & Sec 36(1)",
+        "status": "PASS",
+        "findings": "Name and full address with PIN code declared clearly."
+      },
+      {
+        "ruleCode": "LM-PC-6-1-C",
+        "title": "Net Quantity in Standard SI Units",
+        "sectionReference": "Rule 6(1)(c) & Rule 12",
+        "status": "PASS",
+        "findings": "Declared in standard SI units (1 L / 910 g)."
+      },
+      {
+        "ruleCode": "LM-PC-6-1-E",
+        "title": "Maximum Retail Price (MRP) Format",
+        "sectionReference": "Rule 6(1)(e) & Sec 36(2)",
+        "status": "PASS",
+        "findings": "Declared with explicit inclusive tax qualification: 'MRP ₹ 185.00 (inclusive of all taxes)'."
+      }
+    ]
+  },
+  "verificationLayer": {
+    "fssaiStatus": "VERIFIED",
+    "fssaiLicenseNo": "10012021000071",
+    "agmarkStatus": "VERIFIED",
+    "agmarkSeal": "AGM-GUJ-9042-A",
+    "bisStatus": "VERIFIED",
+    "bisLicenseNo": "IS 548: Part 1"
+  }
+}

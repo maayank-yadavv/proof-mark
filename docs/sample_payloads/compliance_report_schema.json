@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LegalMetrologyInspectionReport",
+  "type": "object",
+  "required": [
+    "inspectionId",
+    "timestamp",
+    "inspector",
+    "product",
+    "extractedPackageData",
+    "complianceEvaluation"
+  ],
+  "properties": {
+    "inspectionId": {
+      "type": "string",
+      "description": "Unique inspection identifier (e.g. INSP-2026-DEL-89412)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "inspector": {
+      "type": "object",
+      "required": ["officerId", "name", "jurisdiction"],
+      "properties": {
+        "officerId": { "type": "string" },
+        "name": { "type": "string" },
+        "designation": { "type": "string" },
+        "jurisdiction": { "type": "string" },
+        "stationId": { "type": "string" }
+      }
+    },
+    "product": {
+      "type": "object",
+      "required": ["productName", "brand", "category"],
+      "properties": {
+        "barcode": { "type": "string" },
+        "productName": { "type": "string" },
+        "brand": { "type": "string" },
+        "category": { "type": "string" },
+        "pdpAreaCm2": { "type": "number" }
+      }
+    },
+    "extractedPackageData": {
+      "type": "object",
+      "required": ["productName", "manufacturerName", "netQuantity", "mrp"],
+      "properties": {
+        "productName": { "type": "string" },
+        "manufacturerName": { "type": "string" },
+        "manufacturerAddress": { "type": "string" },
+        "netQuantity": { "type": "string" },
+        "unitSalePrice": { "type": "string" },
+        "mrp": { "type": "string" },
+        "dateOfMfg": { "type": "string" },
+        "countryOfOrigin": { "type": "string" },
+        "consumerCare": { "type": "string" },
+        "pdpFontHeightMm": { "type": "string" },
+        "rawOcrText": { "type": "string" },
+        "perceptionConfidence": { "type": "number" },
+        "qualityMetrics": {
+          "type": "object",
+          "properties": {
+            "blurScore": { "type": "number" },
+            "brightnessScore": { "type": "number" },
+            "isBlurry": { "type": "boolean" },
+            "isLowLight": { "type": "boolean" },
+            "perspectiveSkewDeg": { "type": "number" }
+          }
+        }
+      }
+    },
+    "complianceEvaluation": {
+      "type": "object",
+      "required": ["overallStatus", "ruleFindings"],
+      "properties": {
+        "totalRulesEvaluated": { "type": "integer" },
+        "passCount": { "type": "integer" },
+        "failCount": { "type": "integer" },
+        "overallStatus": {
+          "type": "string",
+          "enum": ["COMPLIANT", "NON_COMPLIANT", "NEEDS_REVIEW", "PENDING_REINSPECTION"]
+        },
+        "ruleFindings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ruleCode", "status", "findings"],
+            "properties": {
+              "ruleCode": { "type": "string" },
+              "title": { "type": "string" },
+              "sectionReference": { "type": "string" },
+              "status": { "type": "string" },
+              "findings": { "type": "string" },
+              "reasonCode": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Optical Metrology Scanner Calibration Brackets (4 corners) -->
+    <!-- Top-Left Corner -->
+    <path
+        android:pathData="M27,33 L27,27 L33,27"
+        android:strokeColor="#6000E5FF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Top-Right Corner -->
+    <path
+        android:pathData="M75,27 L81,27 L81,33"
+        android:strokeColor="#6000E5FF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Bottom-Left Corner -->
+    <path
+        android:pathData="M27,75 L27,81 L33,81"
+        android:strokeColor="#6000E5FF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Bottom-Right Corner -->
+    <path
+        android:pathData="M75,81 L81,81 L81,75"
+        android:strokeColor="#6000E5FF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Outer Modern Shield Halo (Linear Gradient) -->
+    <path
+        android:pathData="M54,25 C69,25 77,29 77,40 C77,60 54,80 54,80 C54,80 31,60 31,40 C31,29 39,25 54,25 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="31"
+                android:startY="25"
+                android:endX="77"
+                android:endY="80"
+                android:type="linear">
+                <item android:color="#00E5FF" android:offset="0.0" />
+                <item android:color="#2979FF" android:offset="0.45" />
+                <item android:color="#4F46E5" android:offset="0.8" />
+                <item android:color="#7C3AED" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Inner Shield Face (Dark Metallic Midnight Slate Inset) -->
+    <path
+        android:pathData="M54,29 C65,29 72,32 72,41 C72,57 54,74 54,74 C54,74 36,57 36,41 C36,32 43,29 54,29 Z"
+        android:fillColor="#0A1329" />
+
+    <!-- Horizontal Metrology Scanner Beam -->
+    <path
+        android:pathData="M40,49 L68,49"
+        android:strokeColor="#4000E5FF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+
+    <!-- Top Metrology Calibration Pip (Gold Emblem) -->
+    <path
+        android:pathData="M54,36 m-2.5,0 a2.5,2.5 0 1,1 5,0 a2.5,2.5 0 1,1 -5,0"
+        android:fillColor="#FBBF24" />
+
+    <!-- Bold Precision Verification Checkmark (Vibrant Emerald-to-Mint Gradient) -->
+    <path
+        android:pathData="M44,51.5 L50.5,58 L64,43.5"
+        android:strokeWidth="4.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="44"
+                android:startY="58"
+                android:endX="64"
+                android:endY="43"
+                android:type="linear">
+                <item android:color="#00E676" android:offset="0.0" />
+                <item android:color="#00F5D4" android:offset="0.5" />
+                <item android:color="#38BDF8" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+</vector>
