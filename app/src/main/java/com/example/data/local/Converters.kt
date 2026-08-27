@@ -42,4 +42,11 @@ class Converters {
     @TypeConverter
     fun toPackageAngle(value: String?): PackageAngle? =
         value?.let { enumValueOf<PackageAngle>(it) }
+
+    @TypeConverter
+    fun fromSyncItemStatus(status: com.example.data.models.SyncItemStatus?): String? = status?.name
+
+    @TypeConverter
+    fun toSyncItemStatus(value: String?): com.example.data.models.SyncItemStatus? =
+        value?.let { enumValueOf<com.example.data.models.SyncItemStatus>(it) }
 }

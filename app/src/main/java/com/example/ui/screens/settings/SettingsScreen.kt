@@ -23,12 +23,17 @@ import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.VpnKey
+import androidx.compose.material.icons.filled.WbSunny
+import com.example.data.models.AppThemeMode
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -76,11 +81,13 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onNavigateAuditLogs: () -> Unit,
     onNavigateDatabaseInspector: () -> Unit = {},
+    onNavigateFssaiDatabase: () -> Unit = {},
     onLogout: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val firebaseConfig by viewModel.firebaseConfig.collectAsStateWithLifecycle()
+    val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
     val isStandardUser = currentUser.role == UserRole.STANDARD_USER
 
     var showResetDialog by remember { mutableStateOf(false) }
@@ -108,6 +115,18 @@ fun SettingsScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = { viewModel.toggleThemeMode() },
+                        modifier = Modifier.testTag("settings_theme_toggle_button")
+                    ) {
+                        Icon(
+                            imageVector = if (themeMode == AppThemeMode.LIGHT) Icons.Default.NightsStay else Icons.Default.WbSunny,
+                            contentDescription = "Toggle Theme (Light / Dark)",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -175,6 +194,73 @@ fun SettingsScreen(
 
             item {
                 LegalDisclaimerNotice()
+            }
+
+            // Theme & Appearance Card
+            item {
+                Card(
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                    modifier = Modifier.fillMaxWidth().testTag("theme_settings_card")
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Palette,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "App Theme & Appearance",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Text(
+                            text = "Switch between Light Mode and Dark Mode for optimal contrast during indoor store checks or night inspections.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            AppThemeOptionButton(
+                                title = "Light Mode",
+                                icon = Icons.Default.WbSunny,
+                                selected = themeMode == AppThemeMode.LIGHT,
+                                onClick = { viewModel.setThemeMode(AppThemeMode.LIGHT) },
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            AppThemeOptionButton(
+                                title = "Dark Mode",
+                                icon = Icons.Default.NightsStay,
+                                selected = themeMode == AppThemeMode.DARK,
+                                onClick = { viewModel.setThemeMode(AppThemeMode.DARK) },
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            AppThemeOptionButton(
+                                title = "System",
+                                icon = Icons.Default.Tune,
+                                selected = themeMode == AppThemeMode.SYSTEM,
+                                onClick = { viewModel.setThemeMode(AppThemeMode.SYSTEM) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
             }
 
             // User / Officer Profile Card
@@ -495,6 +581,60 @@ fun SettingsScreen(
                 }
 
                 item {
+                    // FSSAI Database Card
+                    Card(
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "FSSAI Food Safety Register Database",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Surface(
+                                    color = Color(0xFF10B981).copy(alpha = 0.15f),
+                                    shape = RoundedCornerShape(6.dp)
+                                ) {
+                                    Text(
+                                        text = "FSS ACT 2006",
+                                        color = Color(0xFF10B981),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = "Search official 14-digit FSSAI licenses, verify food manufacturer premises, check +F Fortified badges, and register new licenses.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Button(
+                                onClick = onNavigateFssaiDatabase,
+                                modifier = Modifier.fillMaxWidth().testTag("open_fssai_database_button")
+                            ) {
+                                Icon(Icons.Default.Verified, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Open FSSAI Register & Lookup Tool")
+                            }
+                        }
+                    }
+                }
+
+                item {
                     // RBAC Role Switcher
                     Card(
                         shape = RoundedCornerShape(14.dp),
@@ -746,6 +886,48 @@ private fun ConsumerChecklistItem(title: String, description: String) {
         Column {
             Text(text = title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
             Text(text = description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun AppThemeOptionButton(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        selected = selected,
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        border = BorderStroke(
+            width = if (selected) 2.dp else 1.dp,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+        ),
+        modifier = modifier
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(vertical = 12.dp, horizontal = 4.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 11.sp
+            )
         }
     }
 }

@@ -66,6 +66,7 @@ import com.example.data.local.entities.InspectionEntity
 import com.example.data.models.ComplianceStatus
 import com.example.data.models.UserRole
 import com.example.ui.components.LegalDisclaimerNotice
+import com.example.ui.components.NetworkConnectivityIndicator
 import com.example.ui.components.SeverityBadge
 import com.example.ui.components.StatusBadge
 import com.example.ui.theme.ComplianceFail
@@ -90,6 +91,7 @@ fun ComplianceResultsScreen(
     modifier: Modifier = Modifier
 ) {
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val networkState by viewModel.networkState.collectAsStateWithLifecycle()
     val isStandardUser = currentUser.role == UserRole.STANDARD_USER
 
     val inspection by viewModel.repository.getInspectionById(inspectionId).collectAsStateWithLifecycle(null)
@@ -136,6 +138,12 @@ fun ComplianceResultsScreen(
                     }
                 },
                 actions = {
+                    NetworkConnectivityIndicator(
+                        networkState = networkState,
+                        onToggleConnectivity = { viewModel.toggleNetworkConnectivity() },
+                        onTriggerPing = { viewModel.triggerNetworkPingCheck() },
+                        modifier = Modifier.padding(end = 4.dp)
+                    )
                     IconButton(onClick = { onNavigateReport(inspectionId) }) {
                         Icon(Icons.Default.Print, contentDescription = "Print Notice / Report")
                     }
@@ -245,6 +253,10 @@ fun ComplianceResultsScreen(
 
                 item {
                     LegalDisclaimerNotice()
+                }
+
+                item {
+                    com.example.ui.components.BilingualImportedCheckerPanel()
                 }
 
                 item {

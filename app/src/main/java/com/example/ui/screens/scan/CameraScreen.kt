@@ -1,6 +1,5 @@
 @file:OptIn(
-    androidx.compose.material3.ExperimentalMaterial3Api::class,
-    androidx.camera.core.ExperimentalGetImage::class
+    androidx.compose.material3.ExperimentalMaterial3Api::class
 )
 
 package com.example.ui.screens.scan
@@ -55,6 +54,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -95,6 +95,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -107,6 +108,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -142,7 +144,7 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -155,10 +157,12 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.ai.ExtractedPackageData
+import com.example.data.ai.ImageStitchingUtil
 import com.example.data.ai.MLKitTextRecognitionService
 import com.example.data.ai.MlKitOcrResult
 import com.example.data.local.entities.ScannedLabelOcrEntity
 import com.example.data.models.ProductCategory
+import com.example.ui.components.NetworkConnectivityIndicator
 import com.example.ui.components.ProofMarkLogoBadge
 import com.example.ui.components.ShimmerImagePreviewSkeleton
 import com.example.ui.components.ShimmerTextExtractionSkeleton
@@ -305,7 +309,8 @@ fun computeRealtimeBlurMetrics(imageProxy: ImageProxy): RealtimeBlurMetrics {
  * Highlights detected text bounding boxes in real-time directly on the camera preview
  * before the final image is captured.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalGetImage::class)
+@OptIn(ExperimentalMaterial3Api::class)
+@ExperimentalGetImage
 @Composable
 fun CameraScreen(
     viewModel: InspectionViewModel,
@@ -461,8 +466,19 @@ fun CameraScreen(
 
     // Room Database Persisted Scans State
     val scannedOcrRecords by viewModel.scannedOcrRecords.collectAsStateWithLifecycle()
+    val networkState by viewModel.networkState.collectAsStateWithLifecycle()
     var showSavedScansSheet by remember { mutableStateOf(false) }
     var latestSavedOcrRecord by remember { mutableStateOf<ScannedLabelOcrEntity?>(null) }
+    var showBatchShelfDialog by remember { mutableStateOf(false) }
+
+    if (showBatchShelfDialog) {
+        com.example.ui.components.BatchShelfInspectionDialog(
+            onDismiss = { showBatchShelfDialog = false },
+            onGenerateReport = { shelfItems ->
+                Toast.makeText(context, "Batch Store Audit Report generated for ${shelfItems.size} packages!", Toast.LENGTH_LONG).show()
+            }
+        )
+    }
 
     // Captured Bitmaps & Final OCR State
     val capturedImages = remember { mutableStateListOf<Bitmap>() }
@@ -470,6 +486,8 @@ fun CameraScreen(
     var isOcrProcessing by remember { mutableStateOf(false) }
     var extractedData by remember { mutableStateOf<ExtractedPackageData?>(null) }
     var showResultsSheet by remember { mutableStateOf(false) }
+    var showStitchedSheet by remember { mutableStateOf(false) }
+    var stitchedBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     // Form Overrides from OCR
     var detectedProductName by remember { mutableStateOf("") }
@@ -651,6 +669,25 @@ fun CameraScreen(
                     }
                 },
                 actions = {
+                    NetworkConnectivityIndicator(
+                        networkState = networkState,
+                        onToggleConnectivity = { viewModel.toggleNetworkConnectivity() },
+                        onTriggerPing = { viewModel.triggerNetworkPingCheck() },
+                        modifier = Modifier.padding(end = 4.dp)
+                    )
+
+                    // Batch Shelf Inspection Mode Button
+                    IconButton(
+                        onClick = { showBatchShelfDialog = true },
+                        modifier = Modifier.testTag("camera_batch_shelf_mode_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Layers,
+                            contentDescription = "Batch Shelf Mode",
+                            tint = Color(0xFF00E676)
+                        )
+                    }
+
                     // Room Database Saved Scans Viewer
                     IconButton(
                         onClick = { showSavedScansSheet = true },
@@ -1116,6 +1153,31 @@ fun CameraScreen(
                                         item {
                                             ShimmerImagePreviewSkeleton(size = 64.dp)
                                         }
+                                    }
+                                }
+
+                                if (capturedImages.size >= 2) {
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    OutlinedButton(
+                                        onClick = {
+                                            stitchedBitmap = ImageStitchingUtil.stitchHorizontally(capturedImages.toList())
+                                            showStitchedSheet = true
+                                        },
+                                        border = BorderStroke(1.dp, Color(0xFF4285F4)),
+                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF4285F4)),
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(36.dp)
+                                            .testTag("stitch_multi_angle_labels_button")
+                                    ) {
+                                        Icon(Icons.Default.Layers, contentDescription = null, modifier = Modifier.size(15.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "STITCH & COMBINE LABELS (${capturedImages.size} PANELS)",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 11.sp
+                                        )
                                     }
                                 }
 
@@ -1772,6 +1834,183 @@ fun CameraScreen(
                 }
             }
         )
+    }
+
+    // Stitched Label Composite Modal
+    if (showStitchedSheet && stitchedBitmap != null) {
+        StitchedLabelPreviewBottomSheet(
+            stitchedBitmap = stitchedBitmap!!,
+            panelCount = capturedImages.size,
+            onDismiss = { showStitchedSheet = false },
+            onRunOcrOnStitched = { bmp ->
+                showStitchedSheet = false
+                processCapturedBitmap(bmp)
+            },
+            onAuditWithStitched = { bmp ->
+                showStitchedSheet = false
+                viewModel.startLiveInspection(
+                    productName = detectedProductName.ifBlank { "Stitched Composite Package (${capturedImages.size} Panels)" },
+                    brand = detectedBrand.ifBlank { "Verified FMCG Manufacturer" },
+                    category = detectedCategory,
+                    pdpArea = 140.0,
+                    batchNumber = "STITCH-${System.currentTimeMillis() % 10000}",
+                    barcode = "890" + (1000000000..9999999999).random(),
+                    location = "Camera Metrology Station #1",
+                    bitmaps = listOf(bmp),
+                    onComplete = { createdInspectionId ->
+                        onInspectionCompleted(createdInspectionId)
+                    }
+                )
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StitchedLabelPreviewBottomSheet(
+    stitchedBitmap: Bitmap,
+    panelCount: Int,
+    onDismiss: () -> Unit,
+    onRunOcrOnStitched: (Bitmap) -> Unit,
+    onAuditWithStitched: (Bitmap) -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        dragHandle = { BottomSheetDefaults.DragHandle() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Layers,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "Stitched Multi-Angle Label Composite",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "$panelCount Angle Panels • Combined ${stitchedBitmap.width} × ${stitchedBitmap.height} px",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Default.Close, contentDescription = "Close")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Stitched Image Canvas Preview
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
+                colors = CardDefaults.cardColors(containerColor = Color.Black),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 240.dp)
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(8.dp)
+                ) {
+                    Image(
+                        bitmap = stitchedBitmap.asImageBitmap(),
+                        contentDescription = "Stitched Composite Label",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize()
+                    )
+
+                    Surface(
+                        color = Color.Black.copy(alpha = 0.75f),
+                        shape = RoundedCornerShape(6.dp),
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(8.dp)
+                    ) {
+                        Text(
+                            text = "SEAMLESS PANORAMIC STITCH",
+                            color = Color(0xFF00E676),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Stitching combines curved bottle labels or multi-sided package boxes into one continuous surface to detect scattered statutory declarations.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedButton(
+                    onClick = { onRunOcrOnStitched(stitchedBitmap) },
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                ) {
+                    Icon(Icons.Default.DocumentScanner, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("OCR STITCHED", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
+
+                Button(
+                    onClick = { onAuditWithStitched(stitchedBitmap) },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                        .weight(1.2f)
+                        .height(44.dp)
+                ) {
+                    Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("AUDIT STITCHED", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
+            }
+        }
     }
 }
 

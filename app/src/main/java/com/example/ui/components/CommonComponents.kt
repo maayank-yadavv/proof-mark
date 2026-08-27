@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,6 +14,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,22 +28,41 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Inbox
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material.icons.filled.WifiOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.example.data.models.NetworkConnectivityMode
+import com.example.data.models.NetworkConnectivityState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -688,8 +709,8 @@ fun ProofMarkLogoBadge(
                 drawCircle(
                     brush = androidx.compose.ui.graphics.Brush.radialGradient(
                         colors = listOf(
-                            Color(0xFF00E5FF).copy(alpha = 0.22f),
-                            Color(0xFF2979FF).copy(alpha = 0.08f),
+                            Color(0xFF22C55E).copy(alpha = 0.30f),
+                            Color(0xFF10B981).copy(alpha = 0.12f),
                             Color.Transparent
                         ),
                         center = Offset(w * 0.5f, h * 0.5f),
@@ -702,7 +723,7 @@ fun ProofMarkLogoBadge(
             val strokeW = (w * 0.035f).coerceAtLeast(1.5f)
             val cornerLen = w * 0.14f
             val pad = w * 0.06f
-            val bracketColor = Color(0xFF00E5FF).copy(alpha = 0.75f)
+            val bracketColor = Color(0xFF22C55E).copy(alpha = 0.85f)
 
             // Top-Left
             drawLine(bracketColor, Offset(pad, pad + cornerLen), Offset(pad, pad), strokeWidth = strokeW, cap = androidx.compose.ui.graphics.StrokeCap.Round)
@@ -720,7 +741,7 @@ fun ProofMarkLogoBadge(
             drawLine(bracketColor, Offset(w - pad - cornerLen, h - pad), Offset(w - pad, h - pad), strokeWidth = strokeW, cap = androidx.compose.ui.graphics.StrokeCap.Round)
             drawLine(bracketColor, Offset(w - pad, h - pad), Offset(w - pad, h - pad - cornerLen), strokeWidth = strokeW, cap = androidx.compose.ui.graphics.StrokeCap.Round)
 
-            // 3. Outer Shield Path with Modern Vibrant Gradient
+            // 3. Outer Shield Path with Modern Light Green Gradient
             val outerShieldPath = androidx.compose.ui.graphics.Path().apply {
                 moveTo(w * 0.5f, h * 0.18f)
                 cubicTo(w * 0.72f, h * 0.18f, w * 0.82f, h * 0.24f, w * 0.82f, h * 0.38f)
@@ -734,17 +755,17 @@ fun ProofMarkLogoBadge(
                 path = outerShieldPath,
                 brush = androidx.compose.ui.graphics.Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFF00E5FF),
-                        Color(0xFF2979FF),
-                        Color(0xFF4F46E5),
-                        Color(0xFF7C3AED)
+                        Color(0xFF4ADE80),
+                        Color(0xFF22C55E),
+                        Color(0xFF10B981),
+                        Color(0xFF059669)
                     ),
                     start = Offset(w * 0.2f, h * 0.18f),
                     end = Offset(w * 0.8f, h * 0.84f)
                 )
             )
 
-            // 4. Inner Shield Inset (High-Contrast Midnight Slate)
+            // 4. Inner Shield Inset (High-Contrast Pitch AMOLED Black)
             val innerShieldPath = androidx.compose.ui.graphics.Path().apply {
                 moveTo(w * 0.5f, h * 0.23f)
                 cubicTo(w * 0.68f, h * 0.23f, w * 0.76f, h * 0.28f, w * 0.76f, h * 0.39f)
@@ -756,12 +777,12 @@ fun ProofMarkLogoBadge(
 
             drawPath(
                 path = innerShieldPath,
-                color = Color(0xFF091224)
+                color = Color(0xFF000000)
             )
 
             // 5. Horizontal Metrology Scanner Line
             drawLine(
-                color = Color(0xFF00E5FF).copy(alpha = 0.45f),
+                color = Color(0xFF4ADE80).copy(alpha = 0.60f),
                 start = Offset(w * 0.32f, h * 0.48f),
                 end = Offset(w * 0.68f, h * 0.48f),
                 strokeWidth = (w * 0.025f).coerceAtLeast(1.5f),
@@ -775,7 +796,7 @@ fun ProofMarkLogoBadge(
                 center = Offset(w * 0.5f, h * 0.32f)
             )
 
-            // 7. Bold Emerald-to-Mint Verification Checkmark
+            // 7. Bold Mint-to-Green Verification Checkmark
             val checkmarkPath = androidx.compose.ui.graphics.Path().apply {
                 moveTo(w * 0.37f, h * 0.51f)
                 lineTo(w * 0.47f, h * 0.61f)
@@ -786,9 +807,9 @@ fun ProofMarkLogoBadge(
                 path = checkmarkPath,
                 brush = androidx.compose.ui.graphics.Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFF00E676),
-                        Color(0xFF00F5D4),
-                        Color(0xFF38BDF8)
+                        Color(0xFF86EFAC),
+                        Color(0xFF22C55E),
+                        Color(0xFF10B981)
                     ),
                     start = Offset(w * 0.37f, h * 0.61f),
                     end = Offset(w * 0.65f, h * 0.41f)
@@ -802,4 +823,625 @@ fun ProofMarkLogoBadge(
         }
     }
 }
+
+/**
+ * Visual Top App Bar Connectivity Indicator showing real-time network status & remote API processing state.
+ */
+@Composable
+fun NetworkConnectivityIndicator(
+    networkState: NetworkConnectivityState,
+    onToggleConnectivity: () -> Unit = {},
+    onTriggerPing: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    val (dotColor, statusLabel, bgAlpha) = when {
+        !networkState.isConnected -> Triple(
+            Color(0xFFEF4444),
+            "Offline",
+            0.18f
+        )
+        networkState.status == com.example.data.models.ConnectivityStatus.SYNCING || networkState.isApiProcessing -> Triple(
+            Color(0xFFF59E0B),
+            if (networkState.pendingSyncCount > 0) "Syncing (${networkState.pendingSyncCount})..." else "Syncing...",
+            0.20f
+        )
+        networkState.status == com.example.data.models.ConnectivityStatus.SYNCED -> Triple(
+            Color(0xFF3B82F6),
+            "Synced",
+            0.20f
+        )
+        else -> Triple(
+            Color(0xFF10B981),
+            if (networkState.pendingSyncCount > 0) "Online (${networkState.pendingSyncCount} pending)" else "Online",
+            0.18f
+        )
+    }
+
+    Surface(
+        color = dotColor.copy(alpha = bgAlpha),
+        shape = RoundedCornerShape(14.dp),
+        border = BorderStroke(1.dp, dotColor.copy(alpha = 0.45f)),
+        modifier = modifier
+            .clickable { showDialog = true }
+            .testTag("top_bar_network_connectivity_indicator")
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+        ) {
+            if (networkState.status == com.example.data.models.ConnectivityStatus.SYNCING || networkState.isApiProcessing) {
+                AnimatedPulseDot(
+                    color = Color(0xFFF59E0B),
+                    size = 8.dp
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(dotColor, CircleShape)
+                )
+            }
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = statusLabel,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = dotColor,
+                fontSize = 11.sp
+            )
+            Spacer(modifier = Modifier.width(5.dp))
+            Icon(
+                imageVector = if (networkState.isConnected) Icons.Default.Wifi else Icons.Default.WifiOff,
+                contentDescription = "Network Status",
+                tint = dotColor,
+                modifier = Modifier.size(13.dp)
+            )
+        }
+    }
+
+    if (showDialog) {
+        NetworkStatusDetailDialog(
+            networkState = networkState,
+            onDismiss = { showDialog = false },
+            onToggleMode = onToggleConnectivity,
+            onTriggerPing = onTriggerPing
+        )
+    }
+}
+
+@Composable
+fun NetworkStatusDetailDialog(
+    networkState: NetworkConnectivityState,
+    onDismiss: () -> Unit,
+    onToggleMode: () -> Unit,
+    onTriggerPing: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (networkState.isConnected) Icons.Default.CloudDone else Icons.Default.WifiOff,
+                        contentDescription = null,
+                        tint = if (networkState.isConnected) Color(0xFF10B981) else Color(0xFFEF4444),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "Remote API Connectivity",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = networkState.mode.displayName,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Online status banner
+                Card(
+                    shape = RoundedCornerShape(10.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (networkState.isConnected) Color(0xFF10B981).copy(alpha = 0.1f) else Color(0xFFEF4444).copy(alpha = 0.1f)
+                    ),
+                    border = BorderStroke(1.dp, if (networkState.isConnected) Color(0xFF10B981).copy(alpha = 0.3f) else Color(0xFFEF4444).copy(alpha = 0.3f))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (networkState.isConnected) "LIVE CONNECTIVITY ACTIVE" else "OFFLINE MODE (LOCAL ENGINE)",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (networkState.isConnected) Color(0xFF047857) else Color(0xFFB91C1C)
+                            )
+                            Text(
+                                text = if (networkState.isConnected) "Ping: ${networkState.pingMs}ms • Latency TLS 1.3" else "Using local Room DB & deterministic offline rules",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Switch(
+                            checked = networkState.isConnected,
+                            onCheckedChange = { onToggleMode() },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Color(0xFF10B981)
+                            )
+                        )
+                    }
+                }
+
+                // API Gateway Status Details
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "CONNECTED COMPLIANCE ENDPOINTS",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+
+                        RemoteEndpointRow(
+                            name = "National Legal Metrology Cloud API",
+                            url = "api.metrology.gov.in/v2/rules",
+                            status = if (networkState.isConnected) "ONLINE" else "DISCONNECTED",
+                            isOnline = networkState.isConnected
+                        )
+
+                        RemoteEndpointRow(
+                            name = "ONDC E-Commerce Benchmark Feed",
+                            url = "ondc.compliance-gateway.org/live",
+                            status = if (networkState.isConnected) "ONLINE" else "DISCONNECTED",
+                            isOnline = networkState.isConnected
+                        )
+
+                        RemoteEndpointRow(
+                            name = "Gemini Vision Perception Engine",
+                            url = "generativelanguage.googleapis.com",
+                            status = if (networkState.isApiProcessing) "SYNCING..." else if (networkState.isConnected) "READY" else "OFFLINE",
+                            isOnline = networkState.isConnected
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Security, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "mTLS 256-bit Encrypted",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = onTriggerPing,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.height(34.dp)
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Test Ping", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text("Close")
+            }
+        }
+    )
+}
+
+@Composable
+private fun RemoteEndpointRow(
+    name: String,
+    url: String,
+    status: String,
+    isOnline: Boolean
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = name, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+            Text(text = url, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp)
+        }
+        Surface(
+            color = if (isOnline) Color(0xFF10B981).copy(alpha = 0.15f) else Color.Gray.copy(alpha = 0.15f),
+            shape = RoundedCornerShape(4.dp)
+        ) {
+            Text(
+                text = status,
+                color = if (isOnline) Color(0xFF047857) else Color.Gray,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                fontSize = 9.sp,
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+            )
+        }
+    }
+}
+
+// ============================================================================
+// CENTRALIZED DESIGN SYSTEM COMPONENTS
+// ============================================================================
+
+/**
+ * Standardized High-Polish Primary App Button
+ */
+@Composable
+fun AppButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    isLoading: Boolean = false,
+    icon: ImageVector? = null,
+    containerColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimary
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled && !isLoading,
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor,
+            contentColor = contentColor,
+            disabledContainerColor = containerColor.copy(alpha = 0.4f),
+            disabledContentColor = contentColor.copy(alpha = 0.6f)
+        ),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(50.dp)
+    ) {
+        if (isLoading) {
+            androidx.compose.material3.CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                color = contentColor,
+                strokeWidth = 2.5.dp
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        } else if (icon != null) {
+            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+/**
+ * Standardized Outlined App Button
+ */
+@Composable
+fun AppOutlinedButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    icon: ImageVector? = null,
+    borderColor: Color = MaterialTheme.colorScheme.outline
+) {
+    OutlinedButton(
+        onClick = onClick,
+        enabled = enabled,
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, if (enabled) borderColor else borderColor.copy(alpha = 0.3f)),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(50.dp)
+    ) {
+        if (icon != null) {
+            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+/**
+ * Standardized Input Field with Soft Surface & Clear Focus State
+ */
+@Composable
+fun AppTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    placeholder: String = "",
+    leadingIcon: ImageVector? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    isError: Boolean = false,
+    errorMessage: String? = null,
+    visualTransformation: androidx.compose.ui.text.input.VisualTransformation = androidx.compose.ui.text.input.VisualTransformation.None,
+    keyboardOptions: androidx.compose.foundation.text.KeyboardOptions = androidx.compose.foundation.text.KeyboardOptions.Default,
+    keyboardActions: androidx.compose.foundation.text.KeyboardActions = androidx.compose.foundation.text.KeyboardActions.Default,
+    singleLine: Boolean = true
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        androidx.compose.material3.OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(label) },
+            placeholder = if (placeholder.isNotEmpty()) { { Text(placeholder) } } else null,
+            leadingIcon = if (leadingIcon != null) { { Icon(leadingIcon, contentDescription = null) } } else null,
+            trailingIcon = trailingIcon,
+            isError = isError,
+            singleLine = singleLine,
+            visualTransformation = visualTransformation,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            shape = RoundedCornerShape(12.dp),
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f),
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+        if (isError && !errorMessage.isNullOrEmpty()) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+        }
+    }
+}
+
+/**
+ * Standardized App Card Surface
+ */
+@Composable
+fun AppCard(
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    containerColor: Color = MaterialTheme.colorScheme.surface,
+    borderColor: Color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+    content: @Composable ColumnScope.() -> Unit
+) {
+    if (onClick != null) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = containerColor),
+            border = BorderStroke(1.dp, borderColor),
+            modifier = modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                content()
+            }
+        }
+    } else {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = containerColor),
+            border = BorderStroke(1.dp, borderColor),
+            modifier = modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                content()
+            }
+        }
+    }
+}
+
+/**
+ * Modern Metric Card for Dashboards & Analytics
+ */
+@Composable
+fun MetricCard(
+    title: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    icon: ImageVector? = null,
+    iconTint: Color = MaterialTheme.colorScheme.primary,
+    accentBg: Color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+    onClick: (() -> Unit)? = null
+) {
+    AppCard(
+        modifier = modifier,
+        onClick = onClick,
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title.uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = 0.5.sp
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (!subtitle.isNullOrEmpty()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            if (icon != null) {
+                Surface(
+                    color = accentBg,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(22.dp))
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Standardized Section Header Composable
+ */
+@Composable
+fun SectionHeader(
+    title: String,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    actionLabel: String? = null,
+    onActionClick: (() -> Unit)? = null
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (!subtitle.isNullOrEmpty()) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        if (actionLabel != null && onActionClick != null) {
+            androidx.compose.material3.TextButton(onClick = onActionClick) {
+                Text(text = actionLabel, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            }
+        }
+    }
+}
+
+/**
+ * Standardized Loading State Composable
+ */
+@Composable
+fun LoadingState(
+    message: String = "Loading compliance records...",
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        androidx.compose.material3.CircularProgressIndicator(
+            color = MaterialTheme.colorScheme.primary,
+            strokeWidth = 3.dp,
+            modifier = Modifier.size(36.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+/**
+ * Standardized Error State Box
+ */
+@Composable
+fun ErrorState(
+    message: String,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AppCard(
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
+        borderColor = MaterialTheme.colorScheme.error.copy(alpha = 0.3f)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.Error, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(24.dp))
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = "Authentication Error", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                Text(text = message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onErrorContainer)
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            AppOutlinedButton(
+                text = "Retry",
+                onClick = onRetry,
+                borderColor = MaterialTheme.colorScheme.error,
+                modifier = Modifier.width(90.dp).height(36.dp)
+            )
+        }
+    }
+}
+
+
 

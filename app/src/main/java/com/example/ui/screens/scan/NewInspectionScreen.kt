@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DocumentScanner
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Button
@@ -78,6 +79,7 @@ import com.example.ui.components.ShimmerTextExtractionSkeleton
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.data.ai.ImageStitchingUtil
 import com.example.data.ai.MLKitTextRecognitionService
 import com.example.data.ai.MlKitOcrResult
 import com.example.data.models.ProductCategory
@@ -319,17 +321,36 @@ fun NewInspectionScreen(
                                 )
 
                                 if (!isOcrProcessing) {
-                                    TextButton(
-                                        onClick = {
-                                            val first = capturedBitmaps.firstOrNull()
-                                            if (first != null) {
-                                                viewModel.runMlKitOcrOnCapturedImage(first)
+                                    Row {
+                                        if (capturedBitmaps.size >= 2) {
+                                            TextButton(
+                                                onClick = {
+                                                    val stitched = ImageStitchingUtil.stitchHorizontally(capturedBitmaps)
+                                                    if (stitched != null) {
+                                                        capturedBitmaps.clear()
+                                                        capturedBitmaps.add(stitched)
+                                                        viewModel.runMlKitOcrOnCapturedImage(stitched)
+                                                    }
+                                                }
+                                            ) {
+                                                Icon(Icons.Default.Layers, contentDescription = null, modifier = Modifier.size(16.dp))
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text("Stitch Panels", style = MaterialTheme.typography.labelSmall)
                                             }
                                         }
-                                    ) {
-                                        Icon(Icons.Default.DocumentScanner, contentDescription = null, modifier = Modifier.size(16.dp))
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("Re-scan OCR", style = MaterialTheme.typography.labelSmall)
+
+                                        TextButton(
+                                            onClick = {
+                                                val first = capturedBitmaps.firstOrNull()
+                                                if (first != null) {
+                                                    viewModel.runMlKitOcrOnCapturedImage(first)
+                                                }
+                                            }
+                                        ) {
+                                            Icon(Icons.Default.DocumentScanner, contentDescription = null, modifier = Modifier.size(16.dp))
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text("Re-scan OCR", style = MaterialTheme.typography.labelSmall)
+                                        }
                                     }
                                 }
                             }

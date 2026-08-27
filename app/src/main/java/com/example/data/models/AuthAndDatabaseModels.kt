@@ -29,3 +29,57 @@ data class AuthSession(
     val sessionStartedAt: Long = 0L,
     val authMethod: String = "PASSWORD" // "PASSWORD", "PIN", "BIOMETRIC", "DEMO_SWITCH"
 )
+
+enum class AppThemeMode(val title: String) {
+    SYSTEM("System Default"),
+    LIGHT("Light Mode"),
+    DARK("Dark Mode")
+}
+
+enum class ConnectivityStatus(
+    val displayName: String,
+    val hexColor: String
+) {
+    ONLINE("Online", "#10B981"),
+    OFFLINE("Offline", "#EF4444"),
+    CHECKING("Checking...", "#F59E0B"),
+    SYNCING("Syncing", "#F59E0B"),
+    SYNCED("Synced", "#3B82F6")
+}
+
+enum class ConnectivityBannerEvent {
+    NONE,
+    OFFLINE_WARNING,
+    ONLINE_RECOVERY
+}
+
+enum class SyncItemStatus {
+    PENDING_SYNC,
+    SYNCING,
+    SYNCED,
+    FAILED
+}
+
+enum class NetworkConnectivityMode(val displayName: String) {
+    ONLINE_CLOUD("Remote Compliance Cloud Active"),
+    PROCESSING_API("Syncing Remote Legal Metrology API"),
+    OFFLINE_LOCAL("Offline Local Rules Engine")
+}
+
+data class NetworkConnectivityState(
+    val status: ConnectivityStatus = ConnectivityStatus.ONLINE,
+    val mode: NetworkConnectivityMode = NetworkConnectivityMode.ONLINE_CLOUD,
+    val isConnected: Boolean = true,
+    val isApiProcessing: Boolean = false,
+    val pingMs: Int = 28,
+    val activeEndpoint: String = "api.metrology.gov.in",
+    val activeApiGateway: String = "National Legal Metrology & ONDC Compliance Gateway",
+    val lastSyncTimestamp: Long = System.currentTimeMillis(),
+    val pendingSyncCount: Int = 0,
+    val syncedCount: Int = 0,
+    val bannerEvent: ConnectivityBannerEvent = ConnectivityBannerEvent.NONE,
+    val bannerMessage: String? = null,
+    val errorMessage: String? = null,
+    val isManualOfflineSimulated: Boolean = false
+)
+

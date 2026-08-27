@@ -363,7 +363,8 @@ object GeminiCompliancePerceptionService {
             val parts = content.optJSONArray("parts") ?: return@withContext null
             if (parts.length() == 0) return@withContext null
 
-            return@withContext parts.getJSONObject(0).optString("text", null)
+            val text = parts.getJSONObject(0).optString("text", "")
+            return@withContext text.ifEmpty { null }
         } catch (e: Exception) {
             Log.w(TAG, "Search Grounding verification failed: ${e.message}")
             return@withContext null

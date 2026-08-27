@@ -4,7 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
@@ -31,7 +34,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.data.models.AppThemeMode
+import com.example.data.models.AuthState
 import com.example.data.models.UserRole
+import com.example.ui.components.ConnectivityBanner
 import com.example.ui.navigation.Screen
 import com.example.ui.screens.audit.AuditLogsScreen
 import com.example.ui.screens.auth.LoginScreen
@@ -39,6 +45,7 @@ import com.example.ui.screens.auth.RegisterScreen
 import com.example.ui.screens.dashboard.DashboardScreen
 import com.example.ui.screens.database.DatabaseInspectorScreen
 import com.example.ui.screens.evidence.EvidenceInspectorScreen
+import com.example.ui.screens.fssai.FssaiDatabaseScreen
 import com.example.ui.screens.history.InspectionHistoryScreen
 import com.example.ui.screens.report.InspectionReportScreen
 import com.example.ui.screens.results.ComplianceResultsScreen
@@ -56,22 +63,41 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ProofMarkTheme {
-                ProofMarkApp()
+            val viewModel: InspectionViewModel = viewModel()
+            val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+            val systemInDark = isSystemInDarkTheme()
+            val isDark = when (themeMode) {
+                AppThemeMode.DARK -> true
+                AppThemeMode.LIGHT -> false
+                AppThemeMode.SYSTEM -> systemInDark
+            }
+
+            ProofMarkTheme(darkTheme = isDark) {
+                ProofMarkApp(viewModel = viewModel)
             }
         }
     }
 }
 
 @Composable
-fun ProofMarkApp() {
+fun ProofMarkApp(viewModel: InspectionViewModel = viewModel()) {
     val navController = rememberNavController()
-    val viewModel: InspectionViewModel = viewModel()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val authState by viewModel.authState.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val networkState by viewModel.networkState.collectAsStateWithLifecycle()
+    val isAuthenticated = authState is AuthState.Authenticated
     val isStandardUser = currentUser.role == UserRole.STANDARD_USER
+
+    androidx.compose.runtime.LaunchedEffect(authState) {
+        if (authState is AuthState.Unauthenticated && currentRoute != Screen.Login.route && currentRoute != Screen.Register.route) {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
     val bottomNavItems = if (isStandardUser) {
         listOf(
@@ -88,7 +114,7 @@ fun ProofMarkApp() {
         )
     }
 
-    val showBottomBar = currentRoute in listOf(
+    val showBottomBar = isAuthenticated && currentRoute in listOf(
         Screen.Dashboard.route,
         Screen.History.route,
         Screen.Rules.route,
@@ -123,11 +149,21 @@ fun ProofMarkApp() {
         },
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.Dashboard.route,
-            modifier = Modifier.padding(innerPadding)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
         ) {
+            ConnectivityBanner(
+                networkState = networkState,
+                onDismissBanner = { viewModel.dismissBanner() }
+            )
+
+            NavHost(
+                navController = navController,
+                startDestination = if (isAuthenticated) Screen.Dashboard.route else Screen.Login.route,
+                modifier = Modifier.weight(1f)
+            ) {
             composable(Screen.Login.route) {
                 LoginScreen(
                     viewModel = viewModel,
@@ -162,7 +198,8 @@ fun ProofMarkApp() {
                     onNavigateHistory = { navController.navigate(Screen.History.route) },
                     onNavigateRules = { navController.navigate(Screen.Rules.route) },
                     onNavigateSettings = { navController.navigate(Screen.Settings.route) },
-                    onNavigateCamera = { navController.navigate(Screen.Camera.route) }
+                    onNavigateCamera = { navController.navigate(Screen.Camera.route) },
+                    onNavigateFssaiDatabase = { navController.navigate(Screen.FssaiDatabase.route) }
                 )
             }
 
@@ -278,12 +315,20 @@ fun ProofMarkApp() {
                 )
             }
 
+            composable(Screen.FssaiDatabase.route) {
+                FssaiDatabaseScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
             composable(Screen.Settings.route) {
                 SettingsScreen(
                     viewModel = viewModel,
                     onBack = { navController.popBackStack() },
                     onNavigateAuditLogs = { navController.navigate(Screen.AuditLogs.route) },
                     onNavigateDatabaseInspector = { navController.navigate(Screen.DatabaseInspector.route) },
+                    onNavigateFssaiDatabase = { navController.navigate(Screen.FssaiDatabase.route) },
                     onLogout = {
                         navController.navigate(Screen.Login.route) {
                             popUpTo(0) { inclusive = true }
@@ -293,4 +338,5 @@ fun ProofMarkApp() {
             }
         }
     }
+}
 }

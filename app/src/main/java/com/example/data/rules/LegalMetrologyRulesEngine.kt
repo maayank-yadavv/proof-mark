@@ -143,6 +143,84 @@ object LegalMetrologyRulesEngine {
             effectiveDate = "2023-01-01",
             severity = RuleSeverity.MAJOR,
             isActive = true
+        ),
+        RuleEntity(
+            id = "rule_lm_food_exp",
+            ruleCode = "LM-PC-FOOD-18",
+            title = "Best Before / Expiry Date on Perishable Commodities",
+            description = "All pre-packaged food & beverage commodities must explicitly state Best Before / Expiry Date alongside FSSAI License Number.",
+            category = ProductCategory.FOOD_BEVERAGES,
+            legalSource = "Legal Metrology (Packaged Commodities) Rules, 2011 & FSSAI 2020",
+            sectionReference = "Rule 6(1)(d) Proviso",
+            ruleVersion = "v3.4-2024",
+            effectiveDate = "2024-01-01",
+            severity = RuleSeverity.CRITICAL,
+            isActive = true
+        ),
+        RuleEntity(
+            id = "rule_lm_oil_temp",
+            ruleCode = "LM-PC-OIL-13",
+            title = "Edible Oil Volume at Standard Reference Temperature (30°C)",
+            description = "Net volume of edible oils & vanaspati must be declared at standard reference temperature of 30°C alongside net weight equivalent in grams/kg.",
+            category = ProductCategory.EDIBLE_OILS_GRAINS,
+            legalSource = "Legal Metrology (Packaged Commodities) Rules, 2011",
+            sectionReference = "Rule 13(2) & Schedule 2",
+            ruleVersion = "v3.1-2022",
+            effectiveDate = "2022-06-01",
+            severity = RuleSeverity.MAJOR,
+            isActive = true
+        ),
+        RuleEntity(
+            id = "rule_lm_cosm_batch",
+            ruleCode = "LM-PC-COSM-21",
+            title = "Cosmetics Manufacturing Batch Number & Precautions",
+            description = "Cosmetics & personal care packages must prominently declare Batch Number, Manufacturing License No., and allergen precautionary statements.",
+            category = ProductCategory.COSMETICS_PERSONAL_CARE,
+            legalSource = "Legal Metrology (Packaged Commodities) Rules & Drugs Rules",
+            sectionReference = "Rule 6(1) & Sec 18",
+            ruleVersion = "v3.0-2021",
+            effectiveDate = "2021-04-01",
+            severity = RuleSeverity.MAJOR,
+            isActive = true
+        ),
+        RuleEntity(
+            id = "rule_lm_elec_bee",
+            ruleCode = "LM-PC-ELEC-24",
+            title = "Electrical Appliance Power Rating & BEE Star Label",
+            description = "Pre-packaged electrical appliances must state Operating Voltage, Frequency, Power Rating, and BEE Energy Star Label on the Principal Display Panel.",
+            category = ProductCategory.ELECTRONICS_APPLIANCES,
+            legalSource = "Legal Metrology Rules & BEE Energy Conservation Regulations",
+            sectionReference = "Rule 6(1) & Schedule 4",
+            ruleVersion = "v3.3-2023",
+            effectiveDate = "2023-09-01",
+            severity = RuleSeverity.MAJOR,
+            isActive = true
+        ),
+        RuleEntity(
+            id = "rule_lm_chem_pict",
+            ruleCode = "LM-PC-CHEM-29",
+            title = "Hazardous Chemical Safety Pictograms & Net Mass",
+            description = "Paints, pesticides, and household chemicals must carry hazard warning symbols, safety precautions, and net mass/volume in standard metric units.",
+            category = ProductCategory.CHEMICALS_PESTICIDES,
+            legalSource = "Legal Metrology Rules & Insecticides Act 1968",
+            sectionReference = "Rule 6(1) & Sec 36",
+            ruleVersion = "v3.2-2022",
+            effectiveDate = "2022-01-01",
+            severity = RuleSeverity.CRITICAL,
+            isActive = true
+        ),
+        RuleEntity(
+            id = "rule_lm_gen_multi",
+            ruleCode = "LM-PC-GEN-02",
+            title = "Multi-Piece Package Count & Individual Unit Price",
+            description = "Packages containing multiple individual items must state total piece count, net quantity of each piece, and per-unit sale price.",
+            category = ProductCategory.GENERAL_MERCHANDISE,
+            legalSource = "Legal Metrology (Packaged Commodities) Rules, 2011",
+            sectionReference = "Rule 6(2) & Rule 17",
+            ruleVersion = "v3.2-2024",
+            effectiveDate = "2024-01-01",
+            severity = RuleSeverity.MAJOR,
+            isActive = true
         )
     )
 

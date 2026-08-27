@@ -23,5 +23,6 @@ sealed class Screen(val route: String, val title: String) {
     data object Rules : Screen("rules", "Rules Registry")
     data object AuditLogs : Screen("audit_logs", "Audit Logs")
     data object DatabaseInspector : Screen("database_inspector", "Room DB Inspector")
+    data object FssaiDatabase : Screen("fssai_database", "FSSAI Register")
     data object Settings : Screen("settings", "Settings & RBAC")
 }

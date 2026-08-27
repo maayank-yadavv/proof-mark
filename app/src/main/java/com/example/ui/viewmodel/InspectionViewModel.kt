@@ -15,18 +15,27 @@ import com.example.data.local.AppDatabase
 import com.example.data.local.entities.AuditLogEntity
 import com.example.data.local.entities.ComplianceCheckEntity
 import com.example.data.local.entities.DeclarationEntity
+import com.example.data.local.entities.FssaiLicenseEntity
 import com.example.data.local.entities.InspectionEntity
 import com.example.data.local.entities.InspectionImageEntity
 import com.example.data.local.entities.OcrResultEntity
 import com.example.data.local.entities.RuleEntity
 import com.example.data.local.entities.ScannedLabelOcrEntity
 import com.example.data.local.entities.UserEntity
+import com.example.data.models.AppThemeMode
 import com.example.data.models.AuthState
 import com.example.data.models.ComplianceStatus
+import com.example.data.models.ConnectivityBannerEvent
+import com.example.data.models.ConnectivityStatus
 import com.example.data.models.DatabaseStatsInfo
+import com.example.data.models.NetworkConnectivityMode
+import com.example.data.models.NetworkConnectivityState
 import com.example.data.models.ProductCategory
 import com.example.data.models.RuleSeverity
+import com.example.data.models.SyncItemStatus
 import com.example.data.models.UserRole
+import com.example.data.network.NetworkMonitor
+import com.example.data.network.OfflineSyncManager
 import com.example.data.repository.InspectionRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -65,6 +74,8 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
     private val db = AppDatabase.getInstance(application)
     val repository = InspectionRepository(db)
     val googleAuthManager = GoogleAuthManager(application)
+    val networkMonitor = NetworkMonitor.getInstance(application)
+    val offlineSyncManager = OfflineSyncManager.getInstance(application)
 
     // Authentication State
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
@@ -207,15 +218,217 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
     val auditLogs: StateFlow<List<AuditLogEntity>> = repository.allAuditLogs
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // FSSAI Database
+    private val _fssaiSearchQuery = MutableStateFlow("")
+    val fssaiSearchQuery: StateFlow<String> = _fssaiSearchQuery.asStateFlow()
+
+    val fssaiLicenses: StateFlow<List<FssaiLicenseEntity>> = combine(
+        repository.allFssaiLicenses,
+        _fssaiSearchQuery
+    ) { licenses, query ->
+        if (query.isBlank()) {
+            licenses
+        } else {
+            val q = query.trim().lowercase()
+            licenses.filter {
+                it.licenseNumber.contains(q, ignoreCase = true) ||
+                        it.companyName.contains(q, ignoreCase = true) ||
+                        it.brandName.contains(q, ignoreCase = true) ||
+                        it.foodCategories.contains(q, ignoreCase = true) ||
+                        it.state.contains(q, ignoreCase = true)
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun updateFssaiSearchQuery(query: String) {
+        _fssaiSearchQuery.value = query
+    }
+
+    fun saveFssaiLicense(license: FssaiLicenseEntity) {
+        viewModelScope.launch {
+            repository.insertOrUpdateFssaiLicense(license)
+            offlineSyncManager.queueSyncItem(
+                actionType = "FSSAI_LICENSE_UPDATE",
+                entityId = license.licenseNumber,
+                title = "FSSAI License Update: ${license.companyName} (${license.licenseNumber})"
+            )
+            if (_networkState.value.isConnected) {
+                triggerAutoSync()
+            }
+        }
+    }
+
+    fun deleteFssaiLicense(licenseNumber: String) {
+        viewModelScope.launch {
+            repository.deleteFssaiLicense(licenseNumber)
+            offlineSyncManager.queueSyncItem(
+                actionType = "FSSAI_LICENSE_DELETE",
+                entityId = licenseNumber,
+                title = "FSSAI License Deleted: $licenseNumber"
+            )
+        }
+    }
+
+    val pendingSyncCount: StateFlow<Int> = offlineSyncManager.pendingCountFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    val pendingSyncItems: StateFlow<List<com.example.data.local.entities.PendingSyncEntity>> = offlineSyncManager.pendingItemsFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    suspend fun verifyFssaiLicenseNumber(licenseNumber: String): FssaiLicenseEntity? {
+        return repository.getFssaiLicenseByNumber(licenseNumber.trim())
+    }
+
     // Pipeline State
     private val _pipelineState = MutableStateFlow(PipelineProgressState())
     val pipelineState: StateFlow<PipelineProgressState> = _pipelineState.asStateFlow()
+
+    // Theme Mode State (DARK, LIGHT, SYSTEM)
+    private val _themeMode = MutableStateFlow(AppThemeMode.DARK)
+    val themeMode: StateFlow<AppThemeMode> = _themeMode.asStateFlow()
+
+    fun setThemeMode(mode: AppThemeMode) {
+        _themeMode.value = mode
+    }
+
+    fun toggleThemeMode() {
+        _themeMode.value = when (_themeMode.value) {
+            AppThemeMode.DARK -> AppThemeMode.LIGHT
+            AppThemeMode.LIGHT -> AppThemeMode.DARK
+            AppThemeMode.SYSTEM -> AppThemeMode.LIGHT
+        }
+    }
+
+    // Network Connectivity & Remote Compliance API State
+    private val _networkState = MutableStateFlow(NetworkConnectivityState())
+    val networkState: StateFlow<NetworkConnectivityState> = _networkState.asStateFlow()
+
+    fun dismissBanner() {
+        _networkState.value = _networkState.value.copy(bannerEvent = ConnectivityBannerEvent.NONE)
+    }
+
+    fun setNetworkConnected(isConnected: Boolean) {
+        val banner = if (!isConnected) ConnectivityBannerEvent.OFFLINE_WARNING else ConnectivityBannerEvent.ONLINE_RECOVERY
+        _networkState.value = _networkState.value.copy(
+            isConnected = isConnected,
+            isManualOfflineSimulated = true,
+            status = if (isConnected) ConnectivityStatus.ONLINE else ConnectivityStatus.OFFLINE,
+            mode = if (isConnected) NetworkConnectivityMode.ONLINE_CLOUD else NetworkConnectivityMode.OFFLINE_LOCAL,
+            bannerEvent = banner
+        )
+        if (isConnected) {
+            triggerAutoSync()
+        }
+    }
+
+    fun toggleNetworkConnectivity() {
+        val current = _networkState.value.isConnected
+        setNetworkConnected(!current)
+    }
+
+    fun triggerAutoSync() {
+        viewModelScope.launch {
+            if (!_networkState.value.isConnected) return@launch
+
+            _networkState.value = _networkState.value.copy(
+                status = ConnectivityStatus.SYNCING,
+                isApiProcessing = true,
+                mode = NetworkConnectivityMode.PROCESSING_API
+            )
+
+            offlineSyncManager.syncAllPendingItems(isNetworkOnline = true) { success, failed ->
+                android.util.Log.i("InspectionViewModel", "AutoSync finish: success=$success, failed=$failed")
+            }
+
+            delay(500)
+            val remainingPending = offlineSyncManager.getPendingCountDirect()
+            _networkState.value = _networkState.value.copy(
+                status = ConnectivityStatus.SYNCED,
+                isApiProcessing = false,
+                mode = NetworkConnectivityMode.ONLINE_CLOUD,
+                pendingSyncCount = remainingPending,
+                lastSyncTimestamp = System.currentTimeMillis()
+            )
+
+            delay(2000)
+            if (_networkState.value.status == ConnectivityStatus.SYNCED) {
+                _networkState.value = _networkState.value.copy(status = ConnectivityStatus.ONLINE)
+            }
+        }
+    }
+
+    fun triggerNetworkPingCheck() {
+        viewModelScope.launch {
+            _networkState.value = _networkState.value.copy(
+                isApiProcessing = true,
+                status = ConnectivityStatus.CHECKING,
+                mode = NetworkConnectivityMode.PROCESSING_API
+            )
+            val isRealOnline = networkMonitor.verifyActualInternetAccess()
+            delay(400)
+            _networkState.value = _networkState.value.copy(
+                isApiProcessing = false,
+                isConnected = isRealOnline,
+                isManualOfflineSimulated = false,
+                status = if (isRealOnline) ConnectivityStatus.ONLINE else ConnectivityStatus.OFFLINE,
+                mode = if (isRealOnline) NetworkConnectivityMode.ONLINE_CLOUD else NetworkConnectivityMode.OFFLINE_LOCAL,
+                pingMs = (18..38).random(),
+                lastSyncTimestamp = System.currentTimeMillis()
+            )
+            if (isRealOnline) {
+                triggerAutoSync()
+            }
+        }
+    }
 
     // Selected Inspection Detail Flows
     private val _selectedInspectionId = MutableStateFlow<String?>(null)
     val selectedInspectionId: StateFlow<String?> = _selectedInspectionId.asStateFlow()
 
     init {
+        // Observe Real Network Hardware & Internet Connectivity
+        viewModelScope.launch {
+            var previousState: Boolean? = null
+            networkMonitor.isOnline.collect { isOnline ->
+                val current = _networkState.value
+                val activeOnline = if (current.isManualOfflineSimulated) current.isConnected else isOnline
+
+                val banner = when {
+                    previousState == false && activeOnline -> ConnectivityBannerEvent.ONLINE_RECOVERY
+                    previousState == true && !activeOnline -> ConnectivityBannerEvent.OFFLINE_WARNING
+                    else -> current.bannerEvent
+                }
+
+                previousState = activeOnline
+                val pendingCount = offlineSyncManager.getPendingCountDirect()
+
+                _networkState.value = current.copy(
+                    isConnected = activeOnline,
+                    status = if (activeOnline) ConnectivityStatus.ONLINE else ConnectivityStatus.OFFLINE,
+                    mode = if (activeOnline) NetworkConnectivityMode.ONLINE_CLOUD else NetworkConnectivityMode.OFFLINE_LOCAL,
+                    pendingSyncCount = pendingCount,
+                    bannerEvent = banner
+                )
+
+                if (banner == ConnectivityBannerEvent.ONLINE_RECOVERY) {
+                    triggerAutoSync()
+                    launch {
+                        delay(3500)
+                        if (_networkState.value.bannerEvent == ConnectivityBannerEvent.ONLINE_RECOVERY) {
+                            _networkState.value = _networkState.value.copy(bannerEvent = ConnectivityBannerEvent.NONE)
+                        }
+                    }
+                }
+            }
+        }
+
+        // Observe Pending Sync Queue Items Count
+        viewModelScope.launch {
+            offlineSyncManager.pendingCountFlow.collect { count ->
+                _networkState.value = _networkState.value.copy(pendingSyncCount = count)
+            }
+        }
+
         viewModelScope.launch {
             repository.seedInitialDataIfEmpty()
             loadDatabaseStats()
@@ -226,14 +439,7 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
                     _currentUser.value = sessionUser
                     _authState.value = AuthState.Authenticated(sessionUser)
                 } else {
-                    val users = repository.allUsers.first()
-                    val first = users.firstOrNull()
-                    if (first != null) {
-                        _currentUser.value = first
-                        _authState.value = AuthState.Authenticated(first)
-                    } else {
-                        _authState.value = AuthState.Unauthenticated
-                    }
+                    _authState.value = AuthState.Unauthenticated
                 }
             }
         }
@@ -489,8 +695,10 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
     fun runMlKitOcrOnCapturedImage(bitmap: Bitmap, onComplete: (MlKitOcrResult) -> Unit = {}, onError: (String) -> Unit = {}) {
         viewModelScope.launch {
             _isOcrProcessing.value = true
+            _networkState.value = _networkState.value.copy(isApiProcessing = true, mode = NetworkConnectivityMode.PROCESSING_API)
             val result = MLKitTextRecognitionService.processImage(bitmap)
             _isOcrProcessing.value = false
+            _networkState.value = _networkState.value.copy(isApiProcessing = false, mode = NetworkConnectivityMode.ONLINE_CLOUD, lastSyncTimestamp = System.currentTimeMillis())
             result.onSuccess { ocr ->
                 _liveOcrResult.value = ocr
                 onComplete(ocr)
@@ -678,6 +886,17 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
                 isProcessing = false
             )
             selectInspection(id)
+
+            // Queue offline sync operation automatically
+            offlineSyncManager.queueSyncItem(
+                actionType = "INSPECTION_RECORD",
+                entityId = id,
+                title = "Inspection Record: $productName ($brand)"
+            )
+            if (_networkState.value.isConnected) {
+                triggerAutoSync()
+            }
+
             onComplete(id)
         }
     }
@@ -685,24 +904,56 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
     fun overrideComplianceCheck(check: ComplianceCheckEntity, newStatus: ComplianceStatus, comment: String) {
         viewModelScope.launch {
             repository.overrideComplianceCheck(check, newStatus, comment, _currentUser.value)
+            offlineSyncManager.queueSyncItem(
+                actionType = "COMPLIANCE_CHECK_OVERRIDE",
+                entityId = check.id,
+                title = "Override Check: ${check.ruleCode} -> $newStatus"
+            )
+            if (_networkState.value.isConnected) {
+                triggerAutoSync()
+            }
         }
     }
 
     fun finalizeInspection(inspectionId: String, penaltyAmount: Double, notes: String) {
         viewModelScope.launch {
             repository.finalizeAndSignInspection(inspectionId, _currentUser.value, penaltyAmount, notes)
+            offlineSyncManager.queueSyncItem(
+                actionType = "FINALIZE_INSPECTION",
+                entityId = inspectionId,
+                title = "Finalize Inspection #$inspectionId (Penalty ₹$penaltyAmount)"
+            )
+            if (_networkState.value.isConnected) {
+                triggerAutoSync()
+            }
         }
     }
 
     fun toggleRule(rule: RuleEntity, isActive: Boolean) {
         viewModelScope.launch {
             repository.toggleRuleActive(rule, isActive, _currentUser.value)
+            offlineSyncManager.queueSyncItem(
+                actionType = "RULE_UPDATE",
+                entityId = rule.id,
+                title = "Toggle Rule ${rule.ruleCode} (Active=$isActive)"
+            )
+            if (_networkState.value.isConnected) {
+                triggerAutoSync()
+            }
         }
     }
 
     fun addNewRule(rule: RuleEntity) {
         viewModelScope.launch {
             repository.addNewRule(rule, _currentUser.value)
+            offlineSyncManager.queueSyncItem(
+                actionType = "RULE_REGISTRATION",
+                entityId = rule.id,
+                title = "Registered New Rule: ${rule.ruleCode}"
+            )
+            if (_networkState.value.isConnected) {
+                triggerAutoSync()
+            }
         }
     }
 

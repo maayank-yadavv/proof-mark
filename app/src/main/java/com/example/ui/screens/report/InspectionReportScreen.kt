@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,6 +42,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -77,6 +81,20 @@ fun InspectionReportScreen(
     val declarations by viewModel.repository.getDeclarations(inspectionId).collectAsStateWithLifecycle(emptyList())
 
     val dateFormat = SimpleDateFormat("dd MMMM yyyy, HH:mm", Locale.getDefault())
+    var showLegalNoticeDialog by remember { mutableStateOf(false) }
+
+    if (showLegalNoticeDialog && inspection != null) {
+        val failingChecks = checks.filter { it.status == ComplianceStatus.POTENTIAL_NON_COMPLIANCE }.map { "${it.legalSection} - ${it.ruleTitle}" }
+        com.example.ui.components.LegalMetrologyNoticeDialog(
+            inspectionId = inspection!!.inspectionNumber,
+            productName = inspection!!.productName,
+            brandName = inspection!!.brand,
+            violatingRules = failingChecks.ifEmpty { listOf("Rule 6(1)(e) - Net Quantity Declaration", "Rule 6(1)(d) - Invalid MRP Format") },
+            totalPenaltyAmount = inspection!!.penaltyAmount,
+            officerName = inspection!!.officerName,
+            onDismiss = { showLegalNoticeDialog = false }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -365,6 +383,20 @@ fun InspectionReportScreen(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = { showLegalNoticeDialog = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = ComplianceFail),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("generate_legal_notice_memo_btn")
+                            ) {
+                                Icon(Icons.Default.Gavel, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Generate Legal Metrology Notice & Statutory Fine Memo", fontWeight = FontWeight.Bold)
                             }
                         }
                     }

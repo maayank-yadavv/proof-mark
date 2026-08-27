@@ -8,9 +8,11 @@ import androidx.room.TypeConverters
 import com.example.data.local.dao.AuditLogDao
 import com.example.data.local.dao.ComplianceCheckDao
 import com.example.data.local.dao.DeclarationDao
+import com.example.data.local.dao.FssaiLicenseDao
 import com.example.data.local.dao.InspectionDao
 import com.example.data.local.dao.InspectionImageDao
 import com.example.data.local.dao.OcrResultDao
+import com.example.data.local.dao.PendingSyncDao
 import com.example.data.local.dao.ProductDao
 import com.example.data.local.dao.RuleDao
 import com.example.data.local.dao.ScannedLabelOcrDao
@@ -18,9 +20,11 @@ import com.example.data.local.dao.UserDao
 import com.example.data.local.entities.AuditLogEntity
 import com.example.data.local.entities.ComplianceCheckEntity
 import com.example.data.local.entities.DeclarationEntity
+import com.example.data.local.entities.FssaiLicenseEntity
 import com.example.data.local.entities.InspectionEntity
 import com.example.data.local.entities.InspectionImageEntity
 import com.example.data.local.entities.OcrResultEntity
+import com.example.data.local.entities.PendingSyncEntity
 import com.example.data.local.entities.ProductEntity
 import com.example.data.local.entities.RuleEntity
 import com.example.data.local.entities.ScannedLabelOcrEntity
@@ -37,9 +41,11 @@ import com.example.data.local.entities.UserEntity
         DeclarationEntity::class,
         ComplianceCheckEntity::class,
         RuleEntity::class,
-        AuditLogEntity::class
+        AuditLogEntity::class,
+        PendingSyncEntity::class,
+        FssaiLicenseEntity::class
     ],
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -54,6 +60,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun ruleDao(): RuleDao
     abstract fun auditLogDao(): AuditLogDao
     abstract fun userDao(): UserDao
+    abstract fun pendingSyncDao(): PendingSyncDao
+    abstract fun fssaiLicenseDao(): FssaiLicenseDao
 
     companion object {
         @Volatile

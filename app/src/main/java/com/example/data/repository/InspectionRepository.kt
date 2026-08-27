@@ -7,10 +7,12 @@ import com.example.data.ai.ExtractedPackageData
 import com.example.data.ai.GeminiCompliancePerceptionService
 import com.example.data.ai.MlKitOcrResult
 import com.example.data.ai.MockInspectionSamples
+import com.example.data.fssai.FssaiSampleDatabase
 import com.example.data.local.AppDatabase
 import com.example.data.local.entities.AuditLogEntity
 import com.example.data.local.entities.ComplianceCheckEntity
 import com.example.data.local.entities.DeclarationEntity
+import com.example.data.local.entities.FssaiLicenseEntity
 import com.example.data.local.entities.InspectionEntity
 import com.example.data.local.entities.InspectionImageEntity
 import com.example.data.local.entities.OcrResultEntity
@@ -43,6 +45,12 @@ class InspectionRepository(private val db: AppDatabase) {
     val allAuditLogs: Flow<List<AuditLogEntity>> = db.auditLogDao().getAllLogs()
     val currentSessionUser: Flow<UserEntity?> = db.userDao().getCurrentSessionUser()
     val allScannedOcrRecords: Flow<List<ScannedLabelOcrEntity>> = db.scannedLabelOcrDao().getAllScannedOcrRecords()
+    val allFssaiLicenses: Flow<List<FssaiLicenseEntity>> = db.fssaiLicenseDao().getAllLicenses()
+
+    fun searchFssaiLicenses(query: String): Flow<List<FssaiLicenseEntity>> = db.fssaiLicenseDao().searchLicenses(query)
+    suspend fun getFssaiLicenseByNumber(number: String): FssaiLicenseEntity? = db.fssaiLicenseDao().getLicenseByNumberDirect(number)
+    suspend fun insertOrUpdateFssaiLicense(license: FssaiLicenseEntity) = db.fssaiLicenseDao().insertLicense(license)
+    suspend fun deleteFssaiLicense(licenseNumber: String) = db.fssaiLicenseDao().deleteLicense(licenseNumber)
 
     fun getInspectionById(id: String): Flow<InspectionEntity?> = db.inspectionDao().getInspectionById(id)
     fun getDeclarations(inspectionId: String): Flow<List<DeclarationEntity>> = db.declarationDao().getDeclarationsForInspection(inspectionId)
@@ -91,7 +99,7 @@ class InspectionRepository(private val db: AppDatabase) {
                     passwordHash = "password123",
                     phone = "+91 98112 34567",
                     stationJurisdiction = "Delhi North-West Field Station",
-                    isCurrentSession = true
+                    isCurrentSession = false
                 ),
                 UserEntity(
                     id = "usr_2",
@@ -145,6 +153,11 @@ class InspectionRepository(private val db: AppDatabase) {
             demoCases.forEachIndexed { index, demo ->
                 loadDemoCaseIntoDatabase(demo, "usr_1", "Insp. Rajesh Kumar", index)
             }
+        }
+
+        val existingFssai = db.fssaiLicenseDao().getLicenseCountDirect()
+        if (existingFssai == 0) {
+            db.fssaiLicenseDao().insertAll(FssaiSampleDatabase.SAMPLE_LICENSES)
         }
     }
 
