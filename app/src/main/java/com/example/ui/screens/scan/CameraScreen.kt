@@ -430,6 +430,9 @@ fun CameraScreen(
                                     }
                                 }
                             }
+                            if (activeFields.size > liveDetectedFields.size && activeFields.isNotEmpty()) {
+                                com.example.utils.HapticFeedbackHelper.triggerClick(context)
+                            }
                             realtimeBoxes = detectedList
                             liveDetectedLinesCount = detectedList.size
                             liveDetectedFields = activeFields
@@ -518,6 +521,18 @@ fun CameraScreen(
                 detectedMrp = extracted.mrp
                 showResultsSheet = true
                 statusMessage = "ML Kit extracted ${ocrResult.totalLinesCount} text lines in ${ocrResult.executionTimeMs}ms"
+
+                // Trigger tactile haptic feedback for field audit scan
+                val hasMissingDeclarations = extracted.mrp.contains("Not Provided", ignoreCase = true) ||
+                        extracted.netQuantity.contains("Not Provided", ignoreCase = true) ||
+                        extracted.manufacturerName.contains("Not Provided", ignoreCase = true) ||
+                        extracted.dateOfMfg.contains("Not Provided", ignoreCase = true)
+
+                if (hasMissingDeclarations) {
+                    com.example.utils.HapticFeedbackHelper.triggerComplianceError(context)
+                } else {
+                    com.example.utils.HapticFeedbackHelper.triggerScanSuccess(context)
+                }
 
                 // Persist extracted OCR text data, timestamp, and local image file to Room DB
                 viewModel.saveScannedLabelOcr(

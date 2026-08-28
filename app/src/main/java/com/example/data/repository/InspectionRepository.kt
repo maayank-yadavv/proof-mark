@@ -167,14 +167,25 @@ class InspectionRepository(private val db: AppDatabase) {
         email: String,
         displayName: String?,
         photoUrl: String?,
-        firebaseUid: String?
+        firebaseUid: String?,
+        role: UserRole = UserRole.STANDARD_USER
     ): Result<UserEntity> {
         val cleanEmail = email.trim().lowercase()
         var user = db.userDao().getUserByEmailOrBadge(cleanEmail)
 
+        val determinedRole = if (cleanEmail.contains("officer") || cleanEmail.contains("inspect")) {
+            UserRole.ENFORCEMENT_OFFICER
+        } else {
+            role
+        }
+
         if (user == null) {
             val shortId = (firebaseUid ?: UUID.randomUUID().toString()).take(8)
-            val badge = "LM-GOOG-" + String.format("%04d", kotlin.math.abs(cleanEmail.hashCode() % 9000 + 1000))
+            val badge = if (determinedRole == UserRole.ENFORCEMENT_OFFICER) {
+                "LM-GOOG-" + String.format("%04d", kotlin.math.abs(cleanEmail.hashCode() % 9000 + 1000))
+            } else {
+                "USR-GOOG-" + String.format("%04d", kotlin.math.abs(cleanEmail.hashCode() % 9000 + 1000))
+            }
             val userName = if (!displayName.isNullOrBlank()) displayName else cleanEmail.substringBefore("@").replace(".", " ").split(" ").joinToString(" ") { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase() else c.toString() } }
 
             user = UserEntity(
@@ -182,21 +193,23 @@ class InspectionRepository(private val db: AppDatabase) {
                 name = userName,
                 email = cleanEmail,
                 badgeNumber = badge,
-                role = UserRole.STANDARD_USER,
-                department = "Retail Package Verification",
+                role = determinedRole,
+                department = if (determinedRole == UserRole.ENFORCEMENT_OFFICER) "Zonal Enforcement Directorate" else "Retail Package Verification",
                 avatarColorHex = "#4285F4",
                 pin = "123456",
                 passwordHash = "google_authenticated",
                 phone = "+91 98000 00000",
-                stationJurisdiction = "Consumer Package Portal",
+                stationJurisdiction = if (determinedRole == UserRole.ENFORCEMENT_OFFICER) "State Enforcement Directorate Zone #3" else "Consumer Package Portal",
                 lastLoginTimestamp = System.currentTimeMillis(),
                 isCurrentSession = true
             )
             db.userDao().insertUser(user)
         } else {
+            val updatedRole = if (determinedRole == UserRole.ENFORCEMENT_OFFICER) UserRole.ENFORCEMENT_OFFICER else user.role
             val updatedUser = user.copy(
                 lastLoginTimestamp = System.currentTimeMillis(),
                 isCurrentSession = true,
+                role = updatedRole,
                 name = if (!displayName.isNullOrBlank()) displayName else user.name
             )
             db.userDao().updateUser(updatedUser)
@@ -540,6 +553,14 @@ class InspectionRepository(private val db: AppDatabase) {
 
         db.scannedLabelOcrDao().insertScannedOcrRecord(entity)
 
+        // Sync Room entity to cloud Firebase Firestore
+        try {
+            val bridge = RoomFirestoreBridge.getInstance(context)
+            bridge.storeScannedLabelMetadata(entity)
+        } catch (e: Throwable) {
+            android.util.Log.w("InspectionRepository", "Room-to-Firestore auto sync warning: ${e.message}")
+        }
+
         val currentOfficer = db.userDao().getCurrentSessionUserDirect()
         db.auditLogDao().insertLog(
             AuditLogEntity(
@@ -548,12 +569,20 @@ class InspectionRepository(private val db: AppDatabase) {
                 actionType = "OCR_SCAN_STORED",
                 performedBy = currentOfficer?.name ?: "Field Inspector",
                 userRole = currentOfficer?.role?.title ?: "Enforcement Officer",
-                details = "Label scan OCR saved to local Room DB: ${ocrResult.totalLinesCount} text lines stored with image at '${file.name}'.",
+                details = "Label scan OCR saved to local Room DB and bridged to Firestore: ${ocrResult.totalLinesCount} text lines stored with image at '${file.name}'.",
                 timestamp = time
             )
         )
 
         return entity
+    }
+
+    suspend fun syncAllRoomRecordsToFirestore(context: Context): Result<Int> {
+        return RoomFirestoreBridge.getInstance(context).syncAllRoomRecordsToFirestore()
+    }
+
+    suspend fun pullRemoteLabelsFromFirestore(context: Context): Result<Int> {
+        return RoomFirestoreBridge.getInstance(context).pullRemoteScannedLabelsToRoom()
     }
 
     suspend fun getDatabaseStats(): DatabaseStatsInfo {

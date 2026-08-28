@@ -60,7 +60,31 @@ object MLKitTextRecognitionService {
         val startTime = System.currentTimeMillis()
         try {
             val inputImage = InputImage.fromBitmap(bitmap, 0)
-            val visionText: Text = recognizer.process(inputImage).await()
+            
+            var visionText: Text? = null
+            var lastException: Exception? = null
+            
+            for (attempt in 1..2) {
+                try {
+                    visionText = recognizer.process(inputImage).await()
+                    if (visionText != null) break
+                } catch (e: Exception) {
+                    lastException = e
+                    val isDownloading = (e is com.google.mlkit.common.MlKitException && e.errorCode == com.google.mlkit.common.MlKitException.UNAVAILABLE) ||
+                            (e.message?.contains("download", ignoreCase = true) == true)
+                    if (isDownloading && attempt < 2) {
+                        Log.w(TAG, "ML Kit text recognition module downloading in background (attempt $attempt): ${e.message}")
+                        kotlinx.coroutines.delay(600)
+                    } else {
+                        break
+                    }
+                }
+            }
+
+            if (visionText == null) {
+                if (lastException != null) throw lastException else throw IllegalStateException("ML Kit text recognition returned null text result")
+            }
+
             val elapsed = System.currentTimeMillis() - startTime
 
             val imgWidth = bitmap.width.toFloat().coerceAtLeast(1f)
@@ -265,28 +289,26 @@ object MLKitTextRecognitionService {
             }
         }
 
-        // Return first prominent uppercase or title-case text line
+        // Return first prominent line if it looks like a product title
         val prominentLine = lines.firstOrNull {
-            it.length in 4..40 && !it.contains("MRP", ignoreCase = true) && !it.contains("Net", ignoreCase = true)
+            it.length in 3..40 && !it.contains("MRP", ignoreCase = true) && !it.contains("Net", ignoreCase = true) && !it.contains("Mfg", ignoreCase = true) && !it.contains("Batch", ignoreCase = true)
         }
-        return prominentLine ?: "Pre-Packaged Retail Commodity"
+        return prominentLine ?: "Not Provided in Image"
     }
 
     private fun extractManufacturerDetails(lines: List<String>, hint: String): Pair<String, String> {
-        var mfgName = hint.ifBlank { "Apex Manufacturing Enterprises Ltd" }
-        var mfgAddress = "Plot 12, Industrial Area, Sector 5, New Delhi - 110020"
+        var mfgName = hint.ifBlank { "Not Provided in Image" }
+        var mfgAddress = "Not Provided in Image"
 
         val mfgPattern = Pattern.compile("(?i)(Mfg\\s*by|Manufactured\\s*by|Packed\\s*by|Marketed\\s*by|Imported\\s*by|Manufacturer)[:\\s]*(.+)")
         val pinPattern = Pattern.compile("\\b[1-9][0-9]{5}\\b")
 
-        var foundMfgLine = false
         val addressBuilder = StringBuilder()
 
         for (i in lines.indices) {
             val line = lines[i]
             val matcher = mfgPattern.matcher(line)
             if (matcher.find()) {
-                foundMfgLine = true
                 val namePart = matcher.group(2)?.trim()
                 if (!namePart.isNullOrBlank()) {
                     mfgName = namePart
@@ -329,7 +351,7 @@ object MLKitTextRecognitionService {
                 }
             }
         }
-        return "100 g"
+        return "Not Provided in Image"
     }
 
     private fun extractMrp(lines: List<String>): String {
@@ -339,8 +361,8 @@ object MLKitTextRecognitionService {
             if (matcher.find()) {
                 val amount = matcher.group(2)
                 val hasTaxes = line.contains("incl", ignoreCase = true) || line.contains("tax", ignoreCase = true)
-                val suffix = if (hasTaxes) "(incl. of all taxes)" else "(incl. of all taxes)"
-                return "₹ $amount $suffix"
+                val suffix = if (hasTaxes) "(incl. of all taxes)" else ""
+                return "₹ $amount $suffix".trim()
             }
         }
 
@@ -350,11 +372,11 @@ object MLKitTextRecognitionService {
             val matcher = rupeePattern.matcher(line)
             if (matcher.find()) {
                 val amount = matcher.group(1)
-                return "₹ $amount (incl. of all taxes)"
+                return "₹ $amount"
             }
         }
 
-        return "₹ 50.00 (incl. of all taxes)"
+        return "Not Provided in Image"
     }
 
     private fun extractUnitSalePrice(lines: List<String>, mrp: String, netQty: String): String {
@@ -368,19 +390,21 @@ object MLKitTextRecognitionService {
         }
 
         // Calculate USP if possible
-        try {
-            val priceNum = mrp.filter { it.isDigit() || it == '.' }.toDoubleOrNull()
-            val qtyNum = netQty.filter { it.isDigit() || it == '.' }.toDoubleOrNull()
-            val unit = netQty.filter { it.isLetter() }.trim()
-            if (priceNum != null && qtyNum != null && qtyNum > 0) {
-                val calculated = priceNum / qtyNum
-                return "₹ ${String.format("%.2f", calculated)} / $unit"
+        if (mrp != "Not Provided in Image" && netQty != "Not Provided in Image") {
+            try {
+                val priceNum = mrp.filter { it.isDigit() || it == '.' }.toDoubleOrNull()
+                val qtyNum = netQty.filter { it.isDigit() || it == '.' }.toDoubleOrNull()
+                val unit = netQty.filter { it.isLetter() }.trim()
+                if (priceNum != null && qtyNum != null && qtyNum > 0) {
+                    val calculated = priceNum / qtyNum
+                    return "₹ ${String.format("%.2f", calculated)} / $unit"
+                }
+            } catch (e: Exception) {
+                // Ignore calculation error
             }
-        } catch (e: Exception) {
-            // Ignore calculation error
         }
 
-        return "₹ 0.50 / g"
+        return "Not Provided in Image"
     }
 
     private fun extractDateOfMfg(lines: List<String>): String {
@@ -403,7 +427,7 @@ object MLKitTextRecognitionService {
             }
         }
 
-        return "08/2026"
+        return "Not Provided in Image"
     }
 
     private fun extractCountryOfOrigin(lines: List<String>): String {
@@ -419,7 +443,7 @@ object MLKitTextRecognitionService {
         }
 
         if (lines.any { it.contains("India", ignoreCase = true) }) return "India"
-        return "India"
+        return "Not Provided in Image"
     }
 
     private fun extractConsumerCare(lines: List<String>): String {
@@ -447,8 +471,8 @@ object MLKitTextRecognitionService {
         return when {
             email.isNotBlank() && phone.isNotBlank() -> "$email / Tel: $phone"
             email.isNotBlank() -> email
-            phone.isNotBlank() -> "Tel: $phone / support@consumer-grievance.in"
-            else -> "care@apexbrand.in / Toll-Free: 1800-11-8900"
+            phone.isNotBlank() -> "Tel: $phone"
+            else -> "Not Provided in Image"
         }
     }
 

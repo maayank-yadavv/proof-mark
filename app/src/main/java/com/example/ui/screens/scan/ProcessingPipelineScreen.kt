@@ -51,6 +51,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.firstOrNull
+import com.example.data.models.ComplianceStatus
 import com.example.ui.theme.CompliancePass
 import com.example.ui.viewmodel.InspectionViewModel
 
@@ -66,6 +68,19 @@ fun ProcessingPipelineScreen(
     modifier: Modifier = Modifier
 ) {
     val pipelineState by viewModel.pipelineState.collectAsStateWithLifecycle()
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    androidx.compose.runtime.LaunchedEffect(pipelineState.completedInspectionId) {
+        val id = pipelineState.completedInspectionId
+        if (id != null) {
+            val inspection = viewModel.repository.getInspectionById(id).firstOrNull()
+            if (inspection?.status == ComplianceStatus.POTENTIAL_NON_COMPLIANCE) {
+                com.example.utils.HapticFeedbackHelper.triggerComplianceError(context)
+            } else {
+                com.example.utils.HapticFeedbackHelper.triggerScanSuccess(context)
+            }
+        }
+    }
 
     val stages = listOf(
         PipelineStageItem("Image Quality & Preprocessing", "Assessing sharpness, glare, lighting & evidentiary clarity", Icons.Default.HighQuality),

@@ -62,6 +62,11 @@ import com.example.ui.theme.ComplianceReview
 import com.example.ui.viewmodel.InspectionViewModel
 import kotlinx.coroutines.launch
 
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.ui.text.style.TextAlign
+import com.example.data.models.UserRole
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatabaseInspectorScreen(
@@ -69,6 +74,8 @@ fun DatabaseInspectorScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val isStandardUser = currentUser.role == UserRole.STANDARD_USER
     val dbStats by viewModel.dbStats.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val clipboardManager = LocalClipboardManager.current
@@ -86,7 +93,7 @@ fun DatabaseInspectorScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Room Database Inspector",
+                        text = if (isStandardUser) "Access Restricted" else "Room Database Inspector",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -97,8 +104,10 @@ fun DatabaseInspectorScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.loadDatabaseStats() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh Stats")
+                    if (!isStandardUser) {
+                        IconButton(onClick = { viewModel.loadDatabaseStats() }) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Refresh Stats")
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -110,13 +119,60 @@ fun DatabaseInspectorScreen(
             .fillMaxSize()
             .testTag("database_inspector_screen")
     ) { innerPadding ->
-        LazyColumn(
-            contentPadding = innerPadding,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
+        if (isStandardUser) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+                        modifier = Modifier.size(72.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "Access Denied",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(36.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = "Access Restricted to Legal Metrology Officers",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "Database Inspection, SQLite row viewing, and database backups are restricted to authenticated Enforcement Officers.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    Button(
+                        onClick = onBack,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Return to Safety")
+                    }
+                }
+            }
+        } else {
+            LazyColumn(
+                contentPadding = innerPadding,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
             item {
                 Spacer(modifier = Modifier.height(4.dp))
                 // Database Header Info
@@ -358,6 +414,7 @@ fun DatabaseInspectorScreen(
                 Spacer(modifier = Modifier.height(30.dp))
             }
         }
+    }
     }
 
     if (showResetConfirmDialog) {

@@ -16,13 +16,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import com.example.data.repository.RoomFirestoreBridge
 import java.util.UUID
 
 /**
  * Manages queued offline operations and safe synchronization with the Remote Legal Metrology API Gateway.
  * Ensures data is never lost during network drops and syncs automatically when internet returns.
  */
-class OfflineSyncManager private constructor(context: Context) {
+class OfflineSyncManager private constructor(private val context: Context) {
 
     private val db = AppDatabase.getInstance(context)
     private val pendingSyncDao = db.pendingSyncDao()
@@ -136,9 +137,28 @@ class OfflineSyncManager private constructor(context: Context) {
      * Executes API payload push to National Legal Metrology & ONDC Gateway.
      */
     private suspend fun executeRemoteSyncOperation(item: PendingSyncEntity): Boolean {
-        // Simulate network API gateway latency & response
-        delay(400)
-        Log.d(TAG, "Syncing payload for ${item.actionType} entity=${item.entityId} to Remote Gateway...")
+        delay(300)
+        Log.d(TAG, "Syncing payload for ${item.actionType} entity=${item.entityId} to Remote Gateway & Firestore...")
+        try {
+            val bridge = RoomFirestoreBridge.getInstance(context)
+            when (item.actionType) {
+                "OCR_SCAN", "OCR_LABEL_SAVED", "CREATE_SCAN" -> {
+                    val record = db.scannedLabelOcrDao().getScannedOcrRecordByIdDirect(item.entityId)
+                    if (record != null) {
+                        bridge.storeScannedLabelMetadata(record)
+                    }
+                }
+                "CREATE_INSPECTION", "FINAL_INSPECTION", "UPDATE_INSPECTION" -> {
+                    val inspection = db.inspectionDao().getInspectionByIdDirect(item.entityId)
+                    if (inspection != null) {
+                        val declarations = db.declarationDao().getDeclarationsDirect(item.entityId)
+                        bridge.storeInspectionMetadata(inspection, declarations)
+                    }
+                }
+            }
+        } catch (e: Throwable) {
+            Log.w(TAG, "Firestore bridge sync error: ${e.message}")
+        }
         return true
     }
 

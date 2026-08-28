@@ -261,7 +261,7 @@ object LegalMetrologyRulesEngine {
         val combined = "$nameVal $addrVal".trim()
         val conf = addressDecl?.confidence ?: nameDecl?.confidence ?: 0.5f
 
-        if (combined.isBlank() || combined.length < 5) {
+        if (combined.isBlank() || combined.contains("Not Provided", ignoreCase = true) || combined.length < 5) {
             return ComplianceCheckEntity(
                 id = UUID.randomUUID().toString(),
                 inspectionId = inspectionId,
@@ -323,7 +323,7 @@ object LegalMetrologyRulesEngine {
         val value = nameDecl?.correctedValue ?: nameDecl?.extractedValue ?: product.name
         val conf = nameDecl?.confidence ?: 0.9f
 
-        return if (value.isNotBlank() && value.length >= 3) {
+        return if (value.isNotBlank() && !value.contains("Not Provided", ignoreCase = true) && value.length >= 3) {
             ComplianceCheckEntity(
                 id = UUID.randomUUID().toString(),
                 inspectionId = inspectionId,
@@ -364,7 +364,7 @@ object LegalMetrologyRulesEngine {
         val value = netQtyDecl?.correctedValue ?: netQtyDecl?.extractedValue ?: ""
         val conf = netQtyDecl?.confidence ?: 0.5f
 
-        if (value.isBlank()) {
+        if (value.isBlank() || value.contains("Not Provided", ignoreCase = true)) {
             return ComplianceCheckEntity(
                 id = UUID.randomUUID().toString(),
                 inspectionId = inspectionId,
@@ -444,7 +444,7 @@ object LegalMetrologyRulesEngine {
         val value = dateDecl?.correctedValue ?: dateDecl?.extractedValue ?: ""
         val conf = dateDecl?.confidence ?: 0.5f
 
-        if (value.isBlank()) {
+        if (value.isBlank() || value.contains("Not Provided", ignoreCase = true)) {
             return ComplianceCheckEntity(
                 id = UUID.randomUUID().toString(),
                 inspectionId = inspectionId,
@@ -569,7 +569,7 @@ object LegalMetrologyRulesEngine {
         val value = mrpDecl?.correctedValue ?: mrpDecl?.extractedValue ?: ""
         val conf = mrpDecl?.confidence ?: 0.5f
 
-        if (value.isBlank()) {
+        if (value.isBlank() || value.contains("Not Provided", ignoreCase = true)) {
             return ComplianceCheckEntity(
                 id = UUID.randomUUID().toString(),
                 inspectionId = inspectionId,
@@ -645,7 +645,7 @@ object LegalMetrologyRulesEngine {
         val value = careDecl?.correctedValue ?: careDecl?.extractedValue ?: ""
         val conf = careDecl?.confidence ?: 0.5f
 
-        if (value.isBlank()) {
+        if (value.isBlank() || value.contains("Not Provided", ignoreCase = true)) {
             return ComplianceCheckEntity(
                 id = UUID.randomUUID().toString(),
                 inspectionId = inspectionId,
@@ -721,7 +721,7 @@ object LegalMetrologyRulesEngine {
         val value = originDecl?.correctedValue ?: originDecl?.extractedValue ?: ""
         val conf = originDecl?.confidence ?: 0.5f
 
-        if (value.isNotBlank() && (value.contains("India", ignoreCase = true) || value.contains("Made in", ignoreCase = true) || value.contains("Country of Origin", ignoreCase = true) || value.contains("Product of", ignoreCase = true))) {
+        if (value.isNotBlank() && !value.contains("Not Provided", ignoreCase = true) && (value.contains("India", ignoreCase = true) || value.contains("Made in", ignoreCase = true) || value.contains("Country of Origin", ignoreCase = true) || value.contains("Product of", ignoreCase = true))) {
             return ComplianceCheckEntity(
                 id = UUID.randomUUID().toString(),
                 inspectionId = inspectionId,

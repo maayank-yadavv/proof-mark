@@ -21,11 +21,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Gavel
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -35,6 +38,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -112,6 +116,15 @@ fun InspectionReportScreen(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = {
+                            inspection?.let { insp ->
+                                com.example.utils.ReportExporter.exportToPdf(context, insp, declarations, checks)
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Default.PictureAsPdf, contentDescription = "Export PDF Report")
+                    }
                     IconButton(
                         onClick = {
                             val shareIntent = Intent(Intent.ACTION_SEND).apply {
@@ -397,6 +410,33 @@ fun InspectionReportScreen(
                                 Icon(Icons.Default.Gavel, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Generate Legal Metrology Notice & Statutory Fine Memo", fontWeight = FontWeight.Bold)
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                OutlinedButton(
+                                    onClick = {
+                                        com.example.utils.ReportExporter.exportToPdf(context, insp, declarations, checks)
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Export PDF Report")
+                                }
+                                OutlinedButton(
+                                    onClick = {
+                                        com.example.utils.ReportExporter.exportToCsv(context, insp, declarations, checks)
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Icon(Icons.Default.TableChart, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Export Editable CSV")
+                                }
                             }
                         }
                     }

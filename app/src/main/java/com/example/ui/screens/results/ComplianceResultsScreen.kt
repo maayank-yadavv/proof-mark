@@ -97,6 +97,16 @@ fun ComplianceResultsScreen(
     val inspection by viewModel.repository.getInspectionById(inspectionId).collectAsStateWithLifecycle(null)
     val checks by viewModel.repository.getChecks(inspectionId).collectAsStateWithLifecycle(emptyList())
     val declarations by viewModel.repository.getDeclarations(inspectionId).collectAsStateWithLifecycle(emptyList())
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    androidx.compose.runtime.LaunchedEffect(inspection?.status) {
+        val status = inspection?.status
+        if (status == ComplianceStatus.POTENTIAL_NON_COMPLIANCE) {
+            com.example.utils.HapticFeedbackHelper.triggerComplianceError(context)
+        } else if (status == ComplianceStatus.PASS) {
+            com.example.utils.HapticFeedbackHelper.triggerScanSuccess(context)
+        }
+    }
 
     val productIntelReport = remember(inspection, declarations) {
         val currentInsp = inspection

@@ -559,6 +559,7 @@ fun NewInspectionScreen(
                                         val extracted = MLKitTextRecognitionService.extractLegalMetrologyDeclarations(listOf(ocr), productName, brand)
                                         productName = extracted.productName
                                         brand = extracted.manufacturerName
+                                        com.example.utils.HapticFeedbackHelper.triggerScanSuccess(context)
                                     },
                                     shape = RoundedCornerShape(10.dp),
                                     modifier = Modifier.fillMaxWidth()

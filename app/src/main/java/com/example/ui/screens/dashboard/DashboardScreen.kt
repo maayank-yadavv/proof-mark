@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.PendingActions
 import androidx.compose.material.icons.filled.PlayArrow
@@ -45,6 +46,8 @@ import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -990,6 +993,9 @@ fun ConsumerPackagingPortalSheetContent(
     onDismiss: () -> Unit
 ) {
     val isStandardUser = currentUser.role == UserRole.STANDARD_USER
+    var showPinAuthDialog by remember { mutableStateOf(false) }
+    var pinInput by remember { mutableStateOf("") }
+    var pinAuthError by remember { mutableStateOf<String?>(null) }
 
     Column(
         modifier = Modifier
@@ -1125,9 +1131,17 @@ fun ConsumerPackagingPortalSheetContent(
             }
         }
 
-        // Officer Mode Card
+        // Officer Mode Card (PIN protected for Standard Users)
         Card(
-            onClick = { onSwitchRole(UserRole.ENFORCEMENT_OFFICER) },
+            onClick = {
+                if (isStandardUser) {
+                    pinInput = ""
+                    pinAuthError = null
+                    showPinAuthDialog = true
+                } else {
+                    onSwitchRole(UserRole.ENFORCEMENT_OFFICER)
+                }
+            },
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
                 containerColor = if (!isStandardUser) Color(0xFF10B981).copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
@@ -1160,14 +1174,28 @@ fun ConsumerPackagingPortalSheetContent(
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Enforcement Officer Terminal (Officer Mode)",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (isStandardUser) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "PIN Protected",
+                                tint = MaterialTheme.colorScheme.outline,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                    }
                     Text(
-                        text = "Enforcement Officer Terminal (Officer Mode)",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Field inspection suite with statutory seizure notices, fine calculators, & audit logs.",
+                        text = if (isStandardUser)
+                            "Protected area: Field inspection suite with statutory seizure notices & audit logs. Security PIN required."
+                        else
+                            "Field inspection suite with statutory seizure notices, fine calculators, & audit logs.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1179,6 +1207,19 @@ fun ConsumerPackagingPortalSheetContent(
                         tint = Color(0xFF22C55E),
                         modifier = Modifier.size(22.dp)
                     )
+                } else {
+                    Surface(
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            text = "PIN REQ",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
                 }
             }
         }
@@ -1197,5 +1238,77 @@ fun ConsumerPackagingPortalSheetContent(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+    }
+
+    if (showPinAuthDialog) {
+        AlertDialog(
+            onDismissRequest = { showPinAuthDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Officer Authentication Required",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "Accessing the Enforcement Officer Terminal and Admin Audit Board requires a 6-digit Officer Security PIN (Default: 123456).",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    OutlinedTextField(
+                        value = pinInput,
+                        onValueChange = { pinInput = it },
+                        label = { Text("6-Digit Security PIN") },
+                        placeholder = { Text("123456") },
+                        isError = pinAuthError != null,
+                        visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword
+                        ),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (pinAuthError != null) {
+                        Text(
+                            text = pinAuthError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (pinInput.trim() == "123456" || pinInput.trim() == currentUser.pin) {
+                            showPinAuthDialog = false
+                            onSwitchRole(UserRole.ENFORCEMENT_OFFICER)
+                        } else {
+                            pinAuthError = "Invalid Officer PIN. Access restricted to authorized officers."
+                        }
+                    },
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Authenticate & Unlock")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showPinAuthDialog = false },
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

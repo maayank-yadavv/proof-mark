@@ -29,7 +29,9 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.Tune
+import com.example.ui.components.AutoFontAdjusterBadge
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material.icons.filled.WbSunny
@@ -258,6 +260,48 @@ fun SettingsScreen(
                                 onClick = { viewModel.setThemeMode(AppThemeMode.SYSTEM) },
                                 modifier = Modifier.weight(1f)
                             )
+                        }
+
+                        // Auto Font Adjuster Display Info
+                        Card(
+                            shape = RoundedCornerShape(10.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
+                            ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.TextFields,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "Auto Font Adjuster Active",
+                                            style = MaterialTheme.typography.labelLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "Text auto-adjusts based on active display resolution and screen width to prevent text overflow and look cleaner.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                AutoFontAdjusterBadge(showDetails = true)
+                            }
                         }
                     }
                 }

@@ -8,8 +8,15 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+
+val LocalAutoFontScale = staticCompositionLocalOf { 1.0f }
+val LocalScreenWidthDp = staticCompositionLocalOf { 360 }
 
 private val ProofMarkDarkColorScheme = darkColorScheme(
     primary = LightGreenBright,
@@ -76,6 +83,18 @@ fun ProofMarkTheme(
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp
+    val screenHeightDp = configuration.screenHeightDp
+
+    val fontScale = remember(screenWidthDp, screenHeightDp) {
+        calculateScreenFontScale(screenWidthDp, screenHeightDp)
+    }
+
+    val autoAdjustedTypography = remember(screenWidthDp, screenHeightDp) {
+        getAutoAdjustedTypography(screenWidthDp, screenHeightDp)
+    }
+
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
@@ -85,12 +104,17 @@ fun ProofMarkTheme(
         else -> ProofMarkLightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        shapes = AppShapes,
-        content = content
-    )
+    CompositionLocalProvider(
+        LocalAutoFontScale provides fontScale,
+        LocalScreenWidthDp provides screenWidthDp
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = autoAdjustedTypography,
+            shapes = AppShapes,
+            content = content
+        )
+    }
 }
 
 @Composable

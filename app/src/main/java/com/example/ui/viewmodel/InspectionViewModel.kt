@@ -567,6 +567,7 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
 
     fun loginWithGoogle(
         activityContext: Activity,
+        targetRole: UserRole = UserRole.STANDARD_USER,
         onSuccess: (UserEntity) -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
@@ -578,7 +579,8 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
                     email = res.email,
                     displayName = res.displayName,
                     photoUrl = res.photoUrl,
-                    firebaseUid = res.firebaseUid
+                    firebaseUid = res.firebaseUid,
+                    role = targetRole
                 )
                 repoResult.onSuccess { user ->
                     _currentUser.value = user
@@ -591,7 +593,7 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
                 }
             }.onFailure { err ->
                 val msg = err.message ?: "Google Sign-In failed."
-                _authState.value = AuthState.Error(msg)
+                _authState.value = AuthState.Unauthenticated
                 onError(msg)
             }
         }
@@ -600,6 +602,7 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
     fun loginWithGoogleDirect(
         email: String,
         displayName: String? = null,
+        targetRole: UserRole = UserRole.STANDARD_USER,
         onSuccess: (UserEntity) -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
@@ -613,7 +616,8 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
                 email = cleanEmail,
                 displayName = name,
                 photoUrl = null,
-                firebaseUid = "goog_" + kotlin.math.abs(cleanEmail.hashCode())
+                firebaseUid = "goog_" + kotlin.math.abs(cleanEmail.hashCode()),
+                role = targetRole
             )
             repoResult.onSuccess { user ->
                 _currentUser.value = user
@@ -728,6 +732,28 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
             _latestSavedOcrScan.value = record
             loadDatabaseStats()
             onSaved(record)
+        }
+    }
+
+    fun syncRoomToFirestore(onResult: (Boolean, String) -> Unit = { _, _ -> }) {
+        viewModelScope.launch {
+            val res = repository.syncAllRoomRecordsToFirestore(getApplication())
+            res.onSuccess { count ->
+                onResult(true, "Successfully bridged $count Room label records to Firestore cloud.")
+            }.onFailure { err ->
+                onResult(false, err.message ?: "Failed to sync Room records to Firestore.")
+            }
+        }
+    }
+
+    fun pullRemoteLabelsFromFirestore(onResult: (Boolean, String) -> Unit = { _, _ -> }) {
+        viewModelScope.launch {
+            val res = repository.pullRemoteLabelsFromFirestore(getApplication())
+            res.onSuccess { count ->
+                onResult(true, "Imported $count remote label records from Firestore to local Room database.")
+            }.onFailure { err ->
+                onResult(false, err.message ?: "Failed to pull remote records from Firestore.")
+            }
         }
     }
 

@@ -91,6 +91,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.models.AuthState
+import com.example.data.models.UserRole
 import com.example.ui.components.FirebaseConfigDialog
 import com.example.ui.components.ProofMarkLogoBadge
 import com.example.ui.viewmodel.InspectionViewModel
@@ -548,6 +549,7 @@ fun LoginScreen(
                                         isAuthenticatingGoogle = true
                                         viewModel.loginWithGoogle(
                                             activityContext = activity,
+                                            targetRole = UserRole.STANDARD_USER,
                                             onSuccess = {
                                                 isAuthenticatingGoogle = false
                                                 onLoginSuccess()
@@ -811,6 +813,7 @@ fun LoginScreen(
                                         isAuthenticatingGoogle = true
                                         viewModel.loginWithGoogle(
                                             activityContext = activity,
+                                            targetRole = UserRole.ENFORCEMENT_OFFICER,
                                             onSuccess = {
                                                 isAuthenticatingGoogle = false
                                                 onLoginSuccess()
@@ -913,6 +916,7 @@ fun LoginScreen(
                 viewModel.loginWithGoogleDirect(
                     email = email,
                     displayName = name,
+                    targetRole = if (portalMode == LoginPortalMode.OFFICER_ADMIN) UserRole.ENFORCEMENT_OFFICER else UserRole.STANDARD_USER,
                     onSuccess = {
                         isAuthenticatingGoogle = false
                         onLoginSuccess()

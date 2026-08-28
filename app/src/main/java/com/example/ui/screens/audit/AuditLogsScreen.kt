@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -44,6 +45,13 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.Button
+import androidx.compose.ui.text.style.TextAlign
+import com.example.data.models.UserRole
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuditLogsScreen(
@@ -51,6 +59,8 @@ fun AuditLogsScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val isStandardUser = currentUser.role == UserRole.STANDARD_USER
     val logs by viewModel.auditLogs.collectAsStateWithLifecycle()
     val dateFormat = SimpleDateFormat("dd MMM yyyy, HH:mm:ss", Locale.getDefault())
 
@@ -59,7 +69,7 @@ fun AuditLogsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Immutable Audit Trail",
+                        text = if (isStandardUser) "Access Restricted" else "Immutable Audit Trail",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -76,13 +86,60 @@ fun AuditLogsScreen(
         },
         modifier = modifier.testTag("audit_logs_screen")
     ) { innerPadding ->
-        LazyColumn(
-            contentPadding = innerPadding,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
+        if (isStandardUser) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+                        modifier = Modifier.size(72.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "Access Denied",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(36.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = "Access Restricted to Legal Metrology Officers",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "The Directorate Audit Trail and Security Chain of Custody logs are strictly restricted to authenticated Enforcement Officers and Directors. Consumer accounts do not have access to administrative audit boards.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    Button(
+                        onClick = onBack,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Return to Safety")
+                    }
+                }
+            }
+        } else {
+            LazyColumn(
+                contentPadding = innerPadding,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
             item {
                 Spacer(modifier = Modifier.height(4.dp))
                 Card(
@@ -182,4 +239,5 @@ fun AuditLogsScreen(
             }
         }
     }
+}
 }

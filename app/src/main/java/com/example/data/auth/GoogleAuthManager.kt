@@ -44,31 +44,35 @@ class GoogleAuthManager(
     }
 
     suspend fun signInWithGoogle(activityContext: Activity): Result<GoogleSignInResult> {
-        val serverClientId = getWebClientId()
-        val rawNonce = UUID.randomUUID().toString()
-        val bytes = rawNonce.toByteArray()
-        val md = MessageDigest.getInstance("SHA-256")
-        val digest = md.digest(bytes)
-        val hashedNonce = digest.fold("") { str, it -> str + "%02x".format(it) }
-
-        val googleIdOption = try {
-            GetSignInWithGoogleOption.Builder(serverClientId)
-                .setNonce(hashedNonce)
-                .build()
-        } catch (e: Exception) {
-            GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(false)
-                .setServerClientId(serverClientId)
-                .setAutoSelectEnabled(false)
-                .setNonce(hashedNonce)
-                .build()
-        }
-
-        val request = GetCredentialRequest.Builder()
-            .addCredentialOption(googleIdOption)
-            .build()
-
         return try {
+            val serverClientId = getWebClientId()
+            val rawNonce = UUID.randomUUID().toString()
+            val bytes = rawNonce.toByteArray()
+            val md = MessageDigest.getInstance("SHA-256")
+            val digest = md.digest(bytes)
+            val hashedNonce = digest.fold("") { str, it -> str + "%02x".format(it) }
+
+            val googleIdOption = try {
+                GetSignInWithGoogleOption.Builder(serverClientId)
+                    .setNonce(hashedNonce)
+                    .build()
+            } catch (e: Throwable) {
+                try {
+                    GetGoogleIdOption.Builder()
+                        .setFilterByAuthorizedAccounts(false)
+                        .setServerClientId(serverClientId)
+                        .setAutoSelectEnabled(false)
+                        .setNonce(hashedNonce)
+                        .build()
+                } catch (e2: Throwable) {
+                    return Result.failure(Exception("GOOGLE_CHOOSER_FALLBACK:Failed to build GoogleIdOption"))
+                }
+            }
+
+            val request = GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build()
+
             val result = credentialManager.getCredential(
                 request = request,
                 context = activityContext
@@ -80,7 +84,7 @@ class GoogleAuthManager(
         } catch (e: GetCredentialException) {
             Log.e(TAG, "Credential Manager error: ${e.type} - ${e.message}", e)
             Result.failure(Exception("GOOGLE_CHOOSER_FALLBACK:${e.localizedMessage ?: e.message}"))
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.e(TAG, "Sign-In unexpected error: ${e.message}", e)
             Result.failure(Exception("GOOGLE_CHOOSER_FALLBACK:${e.localizedMessage ?: e.message}"))
         }
