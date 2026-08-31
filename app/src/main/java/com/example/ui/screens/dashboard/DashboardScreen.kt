@@ -80,6 +80,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -137,11 +138,13 @@ fun DashboardScreen(
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = if (isStandardUser) "Consumer Package Portal" else "Enforcement Officer Terminal",
+                                    text = if (isStandardUser) "Legal Metrology" else "Enforcement Terminal",
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.ExtraBold,
+                                    fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 17.sp
+                                    fontSize = 15.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Surface(
@@ -151,40 +154,31 @@ fun DashboardScreen(
                                 ) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                     ) {
-                                        AnimatedPulseDot(color = Color(0xFF22C55E), size = 6.dp)
+                                        AnimatedPulseDot(color = Color(0xFF22C55E), size = 5.dp)
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
-                                            text = "LIVE AI",
+                                            text = "LIVE",
                                             style = MaterialTheme.typography.labelSmall,
                                             fontSize = 9.sp,
                                             fontWeight = FontWeight.ExtraBold,
-                                            color = Color(0xFF22C55E)
+                                            color = Color(0xFF22C55E),
+                                            maxLines = 1,
+                                            softWrap = false
                                         )
                                     }
                                 }
                             }
 
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(top = 1.dp)
-                            ) {
-                                Icon(
-                                    imageVector = if (isStandardUser) Icons.Default.Inventory2 else Icons.Default.Shield,
-                                    contentDescription = null,
-                                    tint = Color(0xFF22C55E),
-                                    modifier = Modifier.size(12.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "Legal Metrology Inspection",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF22C55E),
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 11.sp
-                                )
-                            }
+                            Text(
+                                text = if (isStandardUser) "Consumer Package Portal" else "Directorate Zone #3",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 10.sp,
+                                maxLines = 1
+                            )
                         }
                     }
                 },
@@ -204,32 +198,9 @@ fun DashboardScreen(
                         networkState = networkState,
                         onToggleConnectivity = { viewModel.toggleNetworkConnectivity() },
                         onTriggerPing = { viewModel.triggerNetworkPingCheck() },
-                        modifier = Modifier.padding(end = 6.dp)
+                        modifier = Modifier.padding(end = 4.dp)
                     )
 
-                    Surface(
-                        color = if (isStandardUser) Color(0xFF10B981).copy(alpha = 0.15f) else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                        shape = RoundedCornerShape(20.dp),
-                        modifier = Modifier.clickable { onNavigateSettings() }
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .background(if (isStandardUser) Color(0xFF10B981) else CompliancePass, CircleShape)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = if (isStandardUser) "User" else currentUser.role.title.take(10),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (isStandardUser) Color(0xFF047857) else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
                     IconButton(
                         onClick = onNavigateSettings,
                         modifier = Modifier.testTag("dashboard_settings_button")
@@ -1067,11 +1038,13 @@ fun ConsumerPackagingPortalSheetContent(
             }
         }
 
-        Text(
-            text = "Select Portal Mode & Audience",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold
-        )
+        if (!isStandardUser) {
+            Text(
+                text = "Select Portal Mode & Audience",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
         // CPG Mode Card
         Card(
@@ -1131,95 +1104,60 @@ fun ConsumerPackagingPortalSheetContent(
             }
         }
 
-        // Officer Mode Card (PIN protected for Standard Users)
-        Card(
-            onClick = {
-                if (isStandardUser) {
-                    pinInput = ""
-                    pinAuthError = null
-                    showPinAuthDialog = true
-                } else {
-                    onSwitchRole(UserRole.ENFORCEMENT_OFFICER)
-                }
-            },
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (!isStandardUser) Color(0xFF10B981).copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-            ),
-            border = BorderStroke(
-                width = if (!isStandardUser) 2.dp else 1.dp,
-                color = if (!isStandardUser) Color(0xFF22C55E) else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-            ),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically
+        // Officer Mode Card (Only visible for Officers/Admins, hidden from normal day-to-day users)
+        if (!isStandardUser) {
+            Card(
+                onClick = { onSwitchRole(UserRole.ENFORCEMENT_OFFICER) },
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFF10B981).copy(alpha = 0.18f)
+                ),
+                border = BorderStroke(
+                    width = 2.dp,
+                    color = Color(0xFF22C55E)
+                ),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Surface(
-                    shape = CircleShape,
-                    color = Color(0xFF22C55E).copy(alpha = 0.2f),
-                    modifier = Modifier.size(40.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.Shield,
-                            contentDescription = null,
-                            tint = Color(0xFF22C55E),
-                            modifier = Modifier.size(22.dp)
-                        )
+                    Surface(
+                        shape = CircleShape,
+                        color = Color(0xFF22C55E).copy(alpha = 0.2f),
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Shield,
+                                contentDescription = null,
+                                tint = Color(0xFF22C55E),
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
                     }
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "Enforcement Officer Terminal (Officer Mode)",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        if (isStandardUser) {
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = "PIN Protected",
-                                tint = MaterialTheme.colorScheme.outline,
-                                modifier = Modifier.size(14.dp)
-                            )
-                        }
+                        Text(
+                            text = "Field inspection suite with statutory seizure notices, fine calculators, & audit logs.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
-                    Text(
-                        text = if (isStandardUser)
-                            "Protected area: Field inspection suite with statutory seizure notices & audit logs. Security PIN required."
-                        else
-                            "Field inspection suite with statutory seizure notices, fine calculators, & audit logs.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                if (!isStandardUser) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = "Active",
                         tint = Color(0xFF22C55E),
                         modifier = Modifier.size(22.dp)
                     )
-                } else {
-                    Surface(
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(6.dp)
-                    ) {
-                        Text(
-                            text = "PIN REQ",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
                 }
             }
         }
