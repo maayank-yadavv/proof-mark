@@ -24,16 +24,21 @@ import com.example.data.local.entities.ScannedLabelOcrEntity
 import com.example.data.local.entities.UserEntity
 import com.example.data.models.AppThemeMode
 import com.example.data.models.AuthState
+import com.example.data.models.CameraScanMode
 import com.example.data.models.ComplianceStatus
 import com.example.data.models.ConnectivityBannerEvent
 import com.example.data.models.ConnectivityStatus
 import com.example.data.models.DatabaseStatsInfo
+import com.example.data.models.ImageOcrAiResult
 import com.example.data.models.NetworkConnectivityMode
 import com.example.data.models.NetworkConnectivityState
 import com.example.data.models.ProductCategory
+import com.example.data.models.QualityMetrics
 import com.example.data.models.RuleSeverity
 import com.example.data.models.SyncItemStatus
 import com.example.data.models.UserRole
+import com.example.data.ai.GeminiCompliancePerceptionService
+import com.example.data.ai.ProductIntelligenceService
 import com.example.data.network.NetworkMonitor
 import com.example.data.network.OfflineSyncManager
 import com.example.data.repository.InspectionRepository
@@ -684,8 +689,28 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    private val _cameraScanMode = MutableStateFlow(CameraScanMode.IMAGE_OCR)
+    val cameraScanMode: StateFlow<CameraScanMode> = _cameraScanMode.asStateFlow()
+
+    fun setCameraScanMode(mode: CameraScanMode) {
+        _cameraScanMode.value = mode
+    }
+
     private val _liveOcrResult = MutableStateFlow<MlKitOcrResult?>(null)
     val liveOcrResult: StateFlow<MlKitOcrResult?> = _liveOcrResult.asStateFlow()
+
+    private val _imageOcrAiResult = MutableStateFlow<ImageOcrAiResult?>(null)
+    val imageOcrAiResult: StateFlow<ImageOcrAiResult?> = _imageOcrAiResult.asStateFlow()
+
+    private val _isImageAiProcessing = MutableStateFlow(false)
+    val isImageAiProcessing: StateFlow<Boolean> = _isImageAiProcessing.asStateFlow()
+
+    private val _imageAiProcessingStage = MutableStateFlow("")
+    val imageAiProcessingStage: StateFlow<String> = _imageAiProcessingStage.asStateFlow()
+
+    fun clearImageOcrAiResult() {
+        _imageOcrAiResult.value = null
+    }
 
     private val _latestSavedOcrScan = MutableStateFlow<ScannedLabelOcrEntity?>(null)
     val latestSavedOcrScan: StateFlow<ScannedLabelOcrEntity?> = _latestSavedOcrScan.asStateFlow()
@@ -707,7 +732,98 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
                 _liveOcrResult.value = ocr
                 onComplete(ocr)
             }.onFailure { err ->
-                onError(err.message ?: "ML Kit OCR failed to recognize text")
+                onError(err.message ?: "Proof ML Kit OCR failed to recognize text")
+            }
+        }
+    }
+
+    fun analyzeImageWithOcrAndGemini(
+        bitmap: Bitmap,
+        productHint: String = "",
+        brandHint: String = "",
+        onComplete: (ImageOcrAiResult) -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            val startTime = System.currentTimeMillis()
+            _isImageAiProcessing.value = true
+            _networkState.value = _networkState.value.copy(isApiProcessing = true, mode = NetworkConnectivityMode.PROCESSING_API)
+
+            try {
+                // Step 1: High-precision on-device ML Kit OCR
+                _imageAiProcessingStage.value = "1/3 Detecting text & layout coordinates with Proof ML Kit..."
+                val ocrResult = MLKitTextRecognitionService.processImage(bitmap).getOrElse {
+                    MlKitOcrResult(
+                        fullText = "Unparsed Image",
+                        blocks = emptyList(),
+                        allBoundingBoxes = emptyList(),
+                        totalLinesCount = 0,
+                        estimatedQuality = QualityMetrics(0, 0, 0, 0, "Unparsed", false),
+                        executionTimeMs = System.currentTimeMillis() - startTime
+                    )
+                }
+                _liveOcrResult.value = ocrResult
+
+                // Step 2: Online Proof AI Perception & LMPC Regulatory Extraction
+                _imageAiProcessingStage.value = "2/3 Extracting package declarations & compliance with Proof AI..."
+                val extractedData = GeminiCompliancePerceptionService.analyzePackageImages(
+                    bitmaps = listOf(bitmap),
+                    productHint = productHint,
+                    brandHint = brandHint
+                )
+
+                val isOnlineAi = com.example.BuildConfig.GEMINI_API_KEY.isNotBlank() &&
+                        com.example.BuildConfig.GEMINI_API_KEY != "MY_GEMINI_API_KEY" &&
+                        com.example.BuildConfig.GEMINI_API_KEY != "null"
+
+                // Step 3: Product Intelligence & Regulatory Database Cross-Matching
+                _imageAiProcessingStage.value = "3/3 Cross-referencing FSSAI & Legal Metrology intelligence..."
+                val resolvedName = if (extractedData.productName != "Not Provided in Image") extractedData.productName else "Commodity Package"
+                val resolvedBrand = if (extractedData.manufacturerName != "Not Provided in Image") extractedData.manufacturerName else "FMCG Brand"
+
+                val intelligenceReport = ProductIntelligenceService.resolveProductIntelligence(
+                    queryOrBarcode = resolvedName,
+                    knownProducts = emptyList(),
+                    scannedDeclarations = emptyList()
+                )
+
+                // Step 4: Persist to Room Local DB
+                val savedRecord = repository.saveScannedLabelOcrRecord(
+                    context = getApplication(),
+                    bitmap = bitmap,
+                    ocrResult = ocrResult,
+                    extractedData = extractedData,
+                    source = "IMAGE_OCR_GEMINI_AI"
+                )
+                _latestSavedOcrScan.value = savedRecord
+                loadDatabaseStats()
+
+                val duration = System.currentTimeMillis() - startTime
+                val finalResult = ImageOcrAiResult(
+                    image = bitmap,
+                    ocrResult = ocrResult,
+                    extractedPackageData = extractedData,
+                    productIntelligence = intelligenceReport,
+                    isGeminiOnline = isOnlineAi,
+                    aiConfidence = extractedData.perceptionConfidence,
+                    executionTimeMs = duration,
+                    rawText = ocrResult.fullText.ifBlank { extractedData.rawOcrText },
+                    savedRecordId = savedRecord.id
+                )
+
+                _imageOcrAiResult.value = finalResult
+                _isImageAiProcessing.value = false
+                _networkState.value = _networkState.value.copy(
+                    isApiProcessing = false,
+                    mode = NetworkConnectivityMode.ONLINE_CLOUD,
+                    lastSyncTimestamp = System.currentTimeMillis()
+                )
+
+                onComplete(finalResult)
+            } catch (e: Exception) {
+                _isImageAiProcessing.value = false
+                _networkState.value = _networkState.value.copy(isApiProcessing = false)
+                onError(e.message ?: "Failed to process image with OCR and AI")
             }
         }
     }

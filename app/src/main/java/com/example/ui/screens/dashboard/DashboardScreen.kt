@@ -86,6 +86,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.ai.MockInspectionSamples
 import com.example.data.models.AppThemeMode
+import com.example.data.models.CameraScanMode
 import com.example.data.models.ComplianceStatus
 import com.example.data.models.UserRole
 import androidx.compose.material.icons.filled.Inventory2
@@ -121,6 +122,7 @@ fun DashboardScreen(
 
     var showDemoPicker by remember { mutableStateOf(false) }
     var showPackagingPortalSheet by remember { mutableStateOf(false) }
+    var showScanModeSheet by remember { mutableStateOf(false) }
     val isStandardUser = currentUser.role == UserRole.STANDARD_USER
 
     Scaffold(
@@ -219,7 +221,7 @@ fun DashboardScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = onNavigateCamera,
+                onClick = { showScanModeSheet = true },
                 icon = {
                     Icon(
                         imageVector = if (isStandardUser) Icons.Default.QrCodeScanner else Icons.Default.CameraAlt,
@@ -228,7 +230,7 @@ fun DashboardScreen(
                 },
                 text = {
                     Text(
-                        text = if (isStandardUser) "Scan Product" else "Live Camera Inspection",
+                        text = if (isStandardUser) "Scan Product" else "Camera Inspection",
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -258,7 +260,7 @@ fun DashboardScreen(
                         userName = currentUser.name,
                         jurisdiction = currentUser.stationJurisdiction,
                         badgeNumber = currentUser.badgeNumber,
-                        onStartCamera = onNavigateCamera,
+                        onStartCamera = { showScanModeSheet = true },
                         onStartManualInspection = onNavigateNewInspection,
                         onLoadPresets = { showDemoPicker = true }
                     )
@@ -570,6 +572,24 @@ fun DashboardScreen(
                     showPackagingPortalSheet = false
                 },
                 onDismiss = { showPackagingPortalSheet = false }
+            )
+        }
+    }
+
+    // Scanning Mode Selection Sheet Modal
+    if (showScanModeSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showScanModeSheet = false },
+            sheetState = rememberModalBottomSheetState(),
+            containerColor = MaterialTheme.colorScheme.surface
+        ) {
+            ScanModeSelectionBottomSheet(
+                onSelectMode = { mode ->
+                    viewModel.setCameraScanMode(mode)
+                    showScanModeSheet = false
+                    onNavigateCamera()
+                },
+                onDismiss = { showScanModeSheet = false }
             )
         }
     }
@@ -1248,5 +1268,211 @@ fun ConsumerPackagingPortalSheetContent(
                 }
             }
         )
+    }
+}
+
+/**
+ * Bottom sheet modal enabling users to choose between Live OCR real-time stream scanning
+ * and Image OCR + Gemini AI high-precision statutory inspection.
+ */
+@Composable
+fun ScanModeSelectionBottomSheet(
+    onSelectMode: (CameraScanMode) -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 8.dp)
+            .padding(bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Header Row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Choose Scanning Mode",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 20.sp
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Select camera inspection and OCR method",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 13.sp
+                )
+            }
+
+            Surface(
+                color = Color(0xFF10B981).copy(alpha = 0.15f),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.45f))
+            ) {
+                Text(
+                    text = "2 MODES",
+                    color = Color(0xFF10B981),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 11.sp,
+                    letterSpacing = 0.5.sp,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                )
+            }
+        }
+
+        // Mode 1: Live OCR Detection
+        ScanModeCard(
+            title = "1. Live OCR Detection",
+            badgeText = "REAL-TIME",
+            badgeTextColor = Color(0xFF00E676),
+            badgeBgColor = Color(0xFF00E676).copy(alpha = 0.15f),
+            badgeBorderColor = Color(0xFF00E676).copy(alpha = 0.6f),
+            description = "Camera opens with live bounding box overlay. Detects statutory fields, MRP, Qty, and blur status continuously in real time.",
+            icon = Icons.Default.DocumentScanner,
+            iconTint = Color(0xFF00E5FF),
+            iconBgColor = Color(0xFF00E5FF).copy(alpha = 0.15f),
+            borderColor = Color(0xFF00E5FF).copy(alpha = 0.7f),
+            onClick = { onSelectMode(CameraScanMode.LIVE_OCR) },
+            testTag = "scan_mode_live_ocr_card"
+        )
+
+        // Mode 2: Image OCR Detection
+        ScanModeCard(
+            title = "2. Image OCR Detection",
+            badgeText = "PROOF AI",
+            badgeTextColor = Color(0xFF8AB4F8),
+            badgeBgColor = Color(0xFF4285F4).copy(alpha = 0.25f),
+            badgeBorderColor = Color(0xFF4285F4).copy(alpha = 0.7f),
+            description = "Take a photo first. Deep Proof ML Kit OCR extracts package details, finds commodity specs, and integrates with online Proof AI for statutory compliance.",
+            icon = Icons.Default.AutoAwesome,
+            iconTint = Color(0xFF4285F4),
+            iconBgColor = Color(0xFF4285F4).copy(alpha = 0.15f),
+            borderColor = Color(0xFF10B981).copy(alpha = 0.7f),
+            onClick = { onSelectMode(CameraScanMode.IMAGE_OCR) },
+            testTag = "scan_mode_image_ocr_card"
+        )
+    }
+}
+
+@Composable
+private fun ScanModeCard(
+    title: String,
+    badgeText: String,
+    badgeTextColor: Color,
+    badgeBgColor: Color,
+    badgeBorderColor: Color,
+    description: String,
+    icon: ImageVector,
+    iconTint: Color,
+    iconBgColor: Color,
+    borderColor: Color,
+    onClick: () -> Unit,
+    testTag: String
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+        border = BorderStroke(1.5.dp, borderColor),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(testTag)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Left circular icon
+            Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(CircleShape)
+                    .background(iconBgColor),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            // Middle title & description column
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 15.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Surface(
+                        color = badgeBgColor,
+                        shape = RoundedCornerShape(6.dp),
+                        border = BorderStroke(1.dp, badgeBorderColor)
+                    ) {
+                        Text(
+                            text = badgeText,
+                            color = badgeTextColor,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 10.sp,
+                            letterSpacing = 0.5.sp,
+                            maxLines = 1,
+                            softWrap = false,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            // Right arrow icon
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Select",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp)
+            )
+        }
     }
 }

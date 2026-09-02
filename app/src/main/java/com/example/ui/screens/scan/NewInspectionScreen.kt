@@ -241,7 +241,7 @@ fun NewInspectionScreen(
                         }
 
                         Text(
-                            text = "Capture Front Principal Display Panel (PDP), Back Declarations & side panels for instant Google ML Kit OCR text recognition.",
+                            text = "Capture Front Principal Display Panel (PDP), Back Declarations & side panels for instant Proof ML Kit OCR text recognition.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 4.dp)
@@ -443,7 +443,7 @@ fun NewInspectionScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Google ML Kit Text Recognition",
+                                    text = "Proof ML Kit Text Recognition",
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
@@ -566,12 +566,12 @@ fun NewInspectionScreen(
                                 ) {
                                     Icon(Icons.Default.AutoFixHigh, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Auto-Fill Commodity Info from ML Kit OCR", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                    Text("Auto-Fill Commodity Info from Proof ML Kit OCR", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                                 }
                             }
                         } else {
                             Text(
-                                text = "Take a photo or upload an image to automatically trigger ML Kit's on-device text recognition pipeline.",
+                                text = "Take a photo or upload an image to automatically trigger Proof ML Kit's on-device text recognition pipeline.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

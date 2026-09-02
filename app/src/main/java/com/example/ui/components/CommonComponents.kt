@@ -1026,7 +1026,7 @@ fun NetworkStatusDetailDialog(
                         )
 
                         RemoteEndpointRow(
-                            name = "Gemini Vision Perception Engine",
+                            name = "Proof AI Vision Perception Engine",
                             url = "generativelanguage.googleapis.com",
                             status = if (networkState.isApiProcessing) "SYNCING..." else if (networkState.isConnected) "READY" else "OFFLINE",
                             isOnline = networkState.isConnected

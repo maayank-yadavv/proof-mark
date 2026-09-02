@@ -39,6 +39,23 @@ enum class PackageAngle(val label: String) {
     ECOMM_LISTING("Digital Listing")
 }
 
+enum class CameraScanMode(val title: String, val subtitle: String, val badgeText: String) {
+    LIVE_OCR("1. Live OCR Detection", "Camera opens with live bounding box overlay. Detects statutory fields, MRP, Qty, and blur status continuously in real time.", "REAL-TIME"),
+    IMAGE_OCR("2. Image OCR Detection", "Take a photo first. Deep Proof ML Kit OCR extracts package details, finds commodity specs, and integrates with online Proof AI for statutory compliance.", "PROOF AI")
+}
+
+data class ImageOcrAiResult(
+    val image: android.graphics.Bitmap,
+    val ocrResult: com.example.data.ai.MlKitOcrResult,
+    val extractedPackageData: com.example.data.ai.ExtractedPackageData,
+    val productIntelligence: com.example.data.models.ProductIntelligenceReport? = null,
+    val isGeminiOnline: Boolean = false,
+    val aiConfidence: Float = 0.95f,
+    val executionTimeMs: Long = 0L,
+    val rawText: String = "",
+    val savedRecordId: String? = null
+)
+
 data class BoundingBox(
     val x: Float, // Normalized 0..1
     val y: Float,

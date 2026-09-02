@@ -256,7 +256,7 @@ fun DatabaseInspectorScreen(
 
             val tableItems = listOf(
                 Triple("inspections", dbStats.totalInspections, "Field enforcement case records and status"),
-                Triple("scanned_label_ocr_records", dbStats.totalScannedOcrRecords, "Extracted ML Kit OCR text data, timestamps & local image paths"),
+                Triple("scanned_label_ocr_records", dbStats.totalScannedOcrRecords, "Extracted Proof ML Kit OCR text data, timestamps & local image paths"),
                 Triple("products", dbStats.totalProducts, "Packaged commodities, barcodes & batch info"),
                 Triple("declarations", dbStats.totalDeclarations, "Extracted Legal Metrology mandatory declarations"),
                 Triple("compliance_checks", dbStats.totalComplianceChecks, "Statutory rule evaluations & officer overrides"),

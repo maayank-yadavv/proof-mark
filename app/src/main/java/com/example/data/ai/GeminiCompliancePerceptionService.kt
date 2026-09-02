@@ -40,7 +40,7 @@ data class ExtractedPackageData(
 object GeminiCompliancePerceptionService {
 
     private const val TAG = "ProofMarkAI"
-    private const val GEMINI_MODEL = "gemini-3.5-flash"
+    private const val GEMINI_MODEL = "gemini-2.5-flash"
     private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 
     private val okHttpClient = OkHttpClient.Builder()
