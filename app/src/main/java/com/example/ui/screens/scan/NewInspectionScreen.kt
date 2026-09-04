@@ -73,6 +73,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
+import com.example.ui.theme.AppFontFamily
 import androidx.compose.ui.text.font.FontWeight
 import com.example.ui.components.ShimmerImagePreviewSkeleton
 import com.example.ui.components.ShimmerTextExtractionSkeleton
@@ -547,7 +548,7 @@ fun NewInspectionScreen(
                                     Text(
                                         text = ocr.fullText.take(160).ifBlank { "No text recognized" } + if (ocr.fullText.length > 160) "..." else "",
                                         style = MaterialTheme.typography.bodySmall,
-                                        fontFamily = FontFamily.Monospace,
+                                        fontFamily = AppFontFamily,
                                         color = MaterialTheme.colorScheme.onSurface,
                                         modifier = Modifier.padding(10.dp)
                                     )

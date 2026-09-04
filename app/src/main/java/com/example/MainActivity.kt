@@ -91,6 +91,11 @@ fun ProofMarkApp(viewModel: InspectionViewModel = viewModel()) {
     val isAuthenticated = authState is AuthState.Authenticated
     val isStandardUser = currentUser.role == UserRole.STANDARD_USER
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        com.example.data.ai.GeminiApiKeyManager.init(context)
+    }
+
     androidx.compose.runtime.LaunchedEffect(authState) {
         if (authState is AuthState.Unauthenticated && currentRoute != Screen.Login.route && currentRoute != Screen.Register.route) {
             navController.navigate(Screen.Login.route) {

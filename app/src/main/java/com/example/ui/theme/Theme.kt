@@ -104,9 +104,19 @@ fun ProofMarkTheme(
         else -> ProofMarkLightColorScheme
     }
 
+    // Proportional Density Scaling based on a baseline width of 360dp
+    val defaultDensity = androidx.compose.ui.platform.LocalDensity.current
+    val densityScaleFactor = (screenWidthDp / 360f).coerceIn(0.8f, 1.3f)
+    
+    val scaledDensity = androidx.compose.ui.unit.Density(
+        density = defaultDensity.density * densityScaleFactor,
+        fontScale = defaultDensity.fontScale * fontScale
+    )
+
     CompositionLocalProvider(
         LocalAutoFontScale provides fontScale,
-        LocalScreenWidthDp provides screenWidthDp
+        LocalScreenWidthDp provides screenWidthDp,
+        androidx.compose.ui.platform.LocalDensity provides scaledDensity
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

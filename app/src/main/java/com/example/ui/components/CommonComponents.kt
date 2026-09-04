@@ -37,11 +37,16 @@ import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
+import com.example.data.models.EvidenceState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -466,6 +471,103 @@ fun SeverityBadge(
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
         )
+    }
+}
+
+/**
+ * Robust, high-contrast, responsive Evidence State Badge.
+ * Correctly distinguishes:
+ * - VERIFIED_PACKAGING: Green "Verified from Packaging"
+ * - VERIFIED_TRUSTED_SOURCE: Emerald "Verified from Trusted Source"
+ * - AI_IDENTIFIED: Blue "AI Identified (Package)"
+ * - ONLINE_SOURCE_FOUND: Purple "Online Benchmark Found"
+ * - NOT_PROVIDED: Gray "Not Provided"
+ * - NOT_APPLICABLE: Gray/Slate "Not Applicable"
+ * - UNABLE_TO_VERIFY: Amber "Unable to Verify"
+ * - NO_PHYSICAL_PRODUCT: Indigo "No Physical Product"
+ */
+@Composable
+fun EvidenceStateBadge(
+    state: EvidenceState,
+    modifier: Modifier = Modifier,
+    compact: Boolean = false
+) {
+    val color = Color(state.colorHex)
+    val icon = when (state) {
+        EvidenceState.VERIFIED_PACKAGING -> Icons.Default.CheckCircle
+        EvidenceState.VERIFIED_TRUSTED_SOURCE -> Icons.Default.Verified
+        EvidenceState.AI_IDENTIFIED -> Icons.Default.Shield
+        EvidenceState.ONLINE_SOURCE_FOUND -> Icons.Default.Public
+        EvidenceState.NOT_PROVIDED -> Icons.Default.HelpOutline
+        EvidenceState.NOT_APPLICABLE -> Icons.Default.Info
+        EvidenceState.UNABLE_TO_VERIFY -> Icons.Default.Warning
+        EvidenceState.NO_PHYSICAL_PRODUCT -> Icons.Default.Devices
+    }
+
+    Surface(
+        shape = RoundedCornerShape(4.dp),
+        color = color.copy(alpha = 0.16f),
+        border = BorderStroke(0.8.dp, color.copy(alpha = 0.45f)),
+        modifier = modifier.testTag("evidence_badge_${state.name.lowercase()}")
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(
+                horizontal = if (compact) 5.dp else 7.dp,
+                vertical = if (compact) 1.5.dp else 2.5.dp
+            )
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(if (compact) 10.dp else 12.dp)
+            )
+            Spacer(modifier = Modifier.width(3.5.dp))
+            Text(
+                text = if (compact) {
+                    when (state) {
+                        EvidenceState.VERIFIED_PACKAGING -> "Package Verified"
+                        EvidenceState.VERIFIED_TRUSTED_SOURCE -> "Trusted Source"
+                        EvidenceState.AI_IDENTIFIED -> "AI Identified"
+                        EvidenceState.ONLINE_SOURCE_FOUND -> "Online Source"
+                        EvidenceState.NOT_PROVIDED -> "Not Provided"
+                        EvidenceState.NOT_APPLICABLE -> "Not Applicable"
+                        EvidenceState.UNABLE_TO_VERIFY -> "Unable to Verify"
+                        EvidenceState.NO_PHYSICAL_PRODUCT -> "Digital (N/A)"
+                    }
+                } else {
+                    state.label
+                },
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = color,
+                fontSize = if (compact) 9.sp else 10.sp,
+                lineHeight = if (compact) 11.sp else 13.sp
+            )
+        }
+    }
+}
+
+/**
+ * Universal resolver from string / metadata value to deterministic EvidenceState.
+ */
+fun resolveEvidenceState(
+    value: String?,
+    isPhysical: Boolean = true,
+    defaultState: EvidenceState = EvidenceState.VERIFIED_PACKAGING
+): EvidenceState {
+    if (value.isNullOrBlank()) return EvidenceState.NOT_PROVIDED
+    val lower = value.trim().lowercase(Locale.ROOT)
+    return when {
+        lower == "not provided" || lower == "not detected" || lower == "missing" || lower == "none" -> EvidenceState.NOT_PROVIDED
+        lower == "unable to verify" || lower == "uncertain" || lower == "unverified" -> EvidenceState.UNABLE_TO_VERIFY
+        lower == "not applicable" || lower == "n/a" || lower == "na" -> EvidenceState.NOT_APPLICABLE
+        lower == "no physical product" || (!isPhysical && (lower.contains("digital") || lower.contains("n/a"))) -> EvidenceState.NO_PHYSICAL_PRODUCT
+        lower.contains("online") || lower.contains("benchmark") -> EvidenceState.ONLINE_SOURCE_FOUND
+        lower.contains("trusted") || lower.contains("registry") || lower.contains("bis") || lower.contains("fssai") -> EvidenceState.VERIFIED_TRUSTED_SOURCE
+        lower.contains("ai") || lower.contains("ocr") -> EvidenceState.AI_IDENTIFIED
+        else -> defaultState
     }
 }
 

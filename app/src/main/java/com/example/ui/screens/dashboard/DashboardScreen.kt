@@ -137,6 +137,21 @@ fun DashboardScreen(
                             .padding(vertical = 4.dp, horizontal = 2.dp)
                             .testTag("top_left_brand_logo_area")
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF4285F4).copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                tint = Color(0xFF8AB4F8),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
@@ -149,28 +164,7 @@ fun DashboardScreen(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Surface(
-                                    color = Color(0xFF10B981).copy(alpha = 0.15f),
-                                    shape = RoundedCornerShape(6.dp),
-                                    border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.45f))
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                    ) {
-                                        AnimatedPulseDot(color = Color(0xFF22C55E), size = 5.dp)
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
-                                            text = "LIVE",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontSize = 9.sp,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = Color(0xFF22C55E),
-                                            maxLines = 1,
-                                            softWrap = false
-                                        )
-                                    }
-                                }
+                                AnimatedPulseDot(color = Color(0xFF22C55E), size = 8.dp)
                             }
 
                             Text(
@@ -665,13 +659,13 @@ fun HeroStartInspectionCard(
                         modifier = Modifier
                             .size(52.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
+                            .background(Color(0xFF4285F4).copy(alpha = 0.2f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = if (isStandardUser) Icons.Default.QrCodeScanner else Icons.Default.AutoAwesome,
+                            imageVector = Icons.Default.AutoAwesome,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = Color(0xFF8AB4F8),
                             modifier = Modifier.size(26.dp)
                         )
                     }
@@ -705,41 +699,21 @@ fun HeroStartInspectionCard(
                         )
                     }
 
-                    // Secondary Options Row: Manual Form & Demo Presets
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
+                    // Secondary Options Row: Demo Presets
+                    if (!isStandardUser) {
                         OutlinedButton(
-                            onClick = onStartManualInspection,
+                            onClick = onLoadPresets,
                             shape = RoundedCornerShape(10.dp),
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
                             modifier = Modifier
-                                .weight(1f)
+                                .fillMaxWidth()
                                 .height(42.dp)
-                                .testTag("new_inspection_button")
+                                .testTag("load_demo_button")
                         ) {
-                            Icon(Icons.Default.Description, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Manual Form", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                        }
-
-                        if (!isStandardUser) {
-                            OutlinedButton(
-                                onClick = onLoadPresets,
-                                shape = RoundedCornerShape(10.dp),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(42.dp)
-                                    .testTag("load_demo_button")
-                            ) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Load Presets", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                            }
+                            Text("Load Presets", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                         }
                     }
                 }
@@ -1273,7 +1247,7 @@ fun ConsumerPackagingPortalSheetContent(
 
 /**
  * Bottom sheet modal enabling users to choose between Live OCR real-time stream scanning
- * and Image OCR + Gemini AI high-precision statutory inspection.
+ * and Image OCR + Cloud AI high-precision statutory inspection.
  */
 @Composable
 fun ScanModeSelectionBottomSheet(

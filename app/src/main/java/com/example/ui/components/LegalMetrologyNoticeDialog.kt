@@ -47,6 +47,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import com.example.ui.theme.AppFontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -192,7 +193,7 @@ fun LegalMetrologyNoticeDialog(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Notice Reference #", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(noticeRefNo, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)
+                            Text(noticeRefNo, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, fontFamily = AppFontFamily)
                         }
                         Row(
                             modifier = Modifier.fillMaxWidth(),

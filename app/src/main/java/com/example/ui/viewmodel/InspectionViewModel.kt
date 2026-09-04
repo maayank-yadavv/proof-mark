@@ -772,9 +772,7 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
                     brandHint = brandHint
                 )
 
-                val isOnlineAi = com.example.BuildConfig.GEMINI_API_KEY.isNotBlank() &&
-                        com.example.BuildConfig.GEMINI_API_KEY != "MY_GEMINI_API_KEY" &&
-                        com.example.BuildConfig.GEMINI_API_KEY != "null"
+                val isOnlineAi = com.example.data.ai.GeminiApiKeyManager.hasApiKey(getApplication())
 
                 // Step 3: Product Intelligence & Regulatory Database Cross-Matching
                 _imageAiProcessingStage.value = "3/3 Cross-referencing FSSAI & Legal Metrology intelligence..."
@@ -793,7 +791,7 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
                     bitmap = bitmap,
                     ocrResult = ocrResult,
                     extractedData = extractedData,
-                    source = "IMAGE_OCR_GEMINI_AI"
+                    source = "IMAGE_OCR_AI"
                 )
                 _latestSavedOcrScan.value = savedRecord
                 loadDatabaseStats()

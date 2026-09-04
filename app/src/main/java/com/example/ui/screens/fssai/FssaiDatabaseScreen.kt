@@ -85,6 +85,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import com.example.ui.theme.AppFontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -865,7 +866,7 @@ private fun FssaiLicenseCard(
                         ) {
                             Text(
                                 text = license.licenseNumber,
-                                fontFamily = FontFamily.Monospace,
+                                fontFamily = AppFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary,
                                 style = MaterialTheme.typography.titleSmall,
@@ -2047,7 +2048,7 @@ private fun FssaiSyncStatusIndicator(
                     Text(
                         text = "https://api.fssai.gov.in/v2/licenses",
                         style = MaterialTheme.typography.bodySmall,
-                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                        fontFamily = com.example.ui.theme.AppFontFamily,
                         color = MaterialTheme.colorScheme.primary,
                         fontSize = 11.sp
                     )

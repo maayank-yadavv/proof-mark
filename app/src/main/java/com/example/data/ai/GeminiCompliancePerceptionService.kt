@@ -52,9 +52,10 @@ object GeminiCompliancePerceptionService {
     suspend fun analyzePackageImages(
         bitmaps: List<Bitmap>,
         productHint: String = "",
-        brandHint: String = ""
+        brandHint: String = "",
+        customApiKey: String? = null
     ): ExtractedPackageData = withContext(Dispatchers.IO) {
-        val apiKey = BuildConfig.GEMINI_API_KEY
+        val apiKey = customApiKey?.takeIf { it.isNotBlank() } ?: GeminiApiKeyManager.getEffectiveApiKey()
 
         val quality = evaluateImageQuality(bitmaps)
 
@@ -304,7 +305,7 @@ object GeminiCompliancePerceptionService {
      * manufacturer company registrations, and legal metrology gazette amendments.
      */
     suspend fun verifyStatutoryRuleGrounding(query: String): String? = withContext(Dispatchers.IO) {
-        val apiKey = BuildConfig.GEMINI_API_KEY
+        val apiKey = GeminiApiKeyManager.getEffectiveApiKey()
         if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY" || apiKey == "null") return@withContext null
 
         try {

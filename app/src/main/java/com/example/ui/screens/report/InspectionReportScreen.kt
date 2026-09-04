@@ -56,6 +56,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
+import com.example.ui.theme.AppFontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -375,7 +376,7 @@ fun InspectionReportScreen(
                             ) {
                                 Column {
                                     Text(text = "Security Audit Hash", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text(text = "SHA-256: 8f4b..99d2", style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace)
+                                    Text(text = "SHA-256: 8f4b..99d2", style = MaterialTheme.typography.labelSmall, fontFamily = AppFontFamily)
                                 }
 
                                 Column(horizontalAlignment = Alignment.End) {

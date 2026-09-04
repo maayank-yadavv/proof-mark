@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +44,11 @@ import com.example.ui.theme.ComplianceFail
 import com.example.ui.theme.CompliancePass
 import com.example.ui.theme.ComplianceReview
 
+import androidx.compose.ui.text.font.FontFamily
+import com.example.ui.theme.AppFontFamily
+import com.example.ui.components.OcrConfidenceBadge
+import com.example.ui.components.getOcrReliabilityLevel
+
 @Composable
 fun InteractiveBoundingBoxViewer(
     boxes: List<BoundingBox>,
@@ -54,6 +61,10 @@ fun InteractiveBoundingBoxViewer(
         Color(android.graphics.Color.parseColor(placeholderColorHex))
     } catch (e: Exception) {
         Color(0xFF1E293B)
+    }
+
+    val avgConfidence = remember(boxes) {
+        if (boxes.isNotEmpty()) boxes.map { it.confidence }.average().toFloat() else 0.92f
     }
 
     Box(
@@ -129,6 +140,46 @@ fun InteractiveBoundingBoxViewer(
                         pathEffect = if (!isSelected) PathEffect.dashPathEffect(floatArrayOf(12f, 6f), 0f) else null
                     )
                 )
+
+                // Draw tiny confidence pill indicator tag at corner of bounding box
+                val confColor = when {
+                    box.confidence >= 0.85f -> Color(0xFF00E676)
+                    box.confidence >= 0.65f -> Color(0xFFFFB300)
+                    else -> Color(0xFFFF5252)
+                }
+                drawCircle(
+                    color = confColor,
+                    radius = if (isSelected) 6f else 4f,
+                    center = Offset(rectLeft + 8f, rectTop + 8f)
+                )
+            }
+        }
+
+        // Top-Right Overall OCR Confidence Score Overlay Chip
+        if (boxes.isNotEmpty()) {
+            Surface(
+                color = Color.Black.copy(alpha = 0.85f),
+                shape = RoundedCornerShape(bottomStart = 8.dp),
+                border = BorderStroke(0.5.dp, Color(0xFF00E5FF).copy(alpha = 0.5f)),
+                modifier = Modifier.align(Alignment.TopEnd)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "OCR Confidence:",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    OcrConfidenceBadge(
+                        confidence = avgConfidence,
+                        compact = true,
+                        showLabel = true
+                    )
+                }
             }
         }
 
@@ -137,11 +188,12 @@ fun InteractiveBoundingBoxViewer(
             val activeBox = boxes.find { it.fieldKey.equals(selectedBoxKey, ignoreCase = true) }
             if (activeBox != null) {
                 Surface(
-                    color = Color.Black.copy(alpha = 0.8f),
+                    color = Color.Black.copy(alpha = 0.88f),
                     shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)),
                     modifier = Modifier
                         .align(Alignment.BottomStart)
-                        .padding(12.dp)
+                        .padding(10.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -161,12 +213,31 @@ fun InteractiveBoundingBoxViewer(
                                 )
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "${activeBox.fieldKey}: \"${activeBox.text.take(32)}\" (${(activeBox.confidence * 100).toInt()}%)",
-                            color = Color.White,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = activeBox.fieldKey,
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                OcrConfidenceBadge(
+                                    confidence = activeBox.confidence,
+                                    compact = true,
+                                    showLabel = true
+                                )
+                            }
+                            if (activeBox.text.isNotBlank()) {
+                                Text(
+                                    text = "\"${activeBox.text.take(45)}\"",
+                                    color = Color(0xFFE2E8F0),
+                                    fontSize = 11.sp,
+                                    fontFamily = AppFontFamily,
+                                    maxLines = 1
+                                )
+                            }
+                        }
                     }
                 }
             }

@@ -55,6 +55,8 @@ import com.example.data.models.ComplianceStatus
 import com.example.data.models.PackageAngle
 import com.example.data.models.QualityMetrics
 import com.example.ui.components.InteractiveBoundingBoxViewer
+import com.example.ui.components.OcrConfidenceBadge
+import com.example.ui.components.OcrConfidenceOverlay
 import com.example.ui.components.QualityScoreCard
 import com.example.ui.components.StatusBadge
 import com.example.ui.theme.ComplianceFail
@@ -241,16 +243,11 @@ fun EvidenceInspectorScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                             }
-                            Surface(
-                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                shape = RoundedCornerShape(6.dp)
-                            ) {
-                                Text(
-                                    text = "Confidence ${(decl.confidence * 100).toInt()}%",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
-                            }
+                            OcrConfidenceBadge(
+                                confidence = decl.confidence,
+                                compact = false,
+                                showLabel = true
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(6.dp))

@@ -54,6 +54,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
+import com.example.ui.theme.AppFontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -226,7 +227,7 @@ fun FoscosPortalBridgeDialog(
                             Text(
                                 text = "License #: ${res.licenseNumber}",
                                 style = MaterialTheme.typography.bodySmall,
-                                fontFamily = FontFamily.Monospace,
+                                fontFamily = AppFontFamily,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
 
@@ -255,7 +256,7 @@ fun FoscosPortalBridgeDialog(
                                 text = "Verification Token: ${res.foscosVerificationRef}",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontSize = 10.sp,
-                                fontFamily = FontFamily.Monospace,
+                                fontFamily = AppFontFamily,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
 

@@ -69,6 +69,7 @@ import com.example.BuildConfig
 import com.example.data.models.UserRole
 import com.example.ui.components.FirebaseConfigDialog
 import com.example.ui.components.LegalDisclaimerNotice
+import com.example.ui.components.NationalConsumerHelplineCard
 import com.example.ui.components.ProofMarkLogoBadge
 import com.example.ui.components.ResponsiveContainer
 import com.example.ui.theme.CompliancePass
@@ -409,32 +410,7 @@ fun SettingsScreen(
                 }
 
                 item {
-                    Card(
-                        shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFF10B981).copy(alpha = 0.08f)
-                        ),
-                        border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.25f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Phone, contentDescription = null, tint = Color(0xFF047857), modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "National Consumer Helpline",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF047857)
-                                )
-                            }
-                            Text(
-                                text = "Dial Toll-Free: 1915 or SMS to 8800001915 to report violations, overcharging above MRP, or missing declarations.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
+                    NationalConsumerHelplineCard()
                 }
             }
 

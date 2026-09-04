@@ -53,6 +53,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import com.example.ui.theme.AppFontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -202,7 +203,7 @@ fun DatabaseInspectorScreen(
                                     text = dbStats.databaseName,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily.Monospace
+                                    fontFamily = AppFontFamily
                                 )
                             }
                             Surface(
@@ -296,7 +297,7 @@ fun DatabaseInspectorScreen(
                                     text = tableName,
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily.Monospace
+                                    fontFamily = AppFontFamily
                                 )
                                 Text(
                                     text = desc,
@@ -402,7 +403,7 @@ fun DatabaseInspectorScreen(
                             Text(
                                 text = exportedJson ?: "",
                                 style = MaterialTheme.typography.bodySmall,
-                                fontFamily = FontFamily.Monospace,
+                                fontFamily = AppFontFamily,
                                 maxLines = 15
                             )
                         }

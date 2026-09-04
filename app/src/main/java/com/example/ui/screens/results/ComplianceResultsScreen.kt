@@ -64,11 +64,17 @@ import com.example.data.local.entities.ComplianceCheckEntity
 import com.example.data.local.entities.DeclarationEntity
 import com.example.data.local.entities.InspectionEntity
 import com.example.data.models.ComplianceStatus
+import com.example.data.models.EvidenceState
 import com.example.data.models.UserRole
+import com.example.ui.components.EvidenceStateBadge
+import com.example.ui.components.InspectionComplianceSummaryCard
 import com.example.ui.components.LegalDisclaimerNotice
 import com.example.ui.components.NetworkConnectivityIndicator
+import com.example.ui.components.OcrConfidenceBadge
+import com.example.ui.components.OcrConfidenceOverlay
 import com.example.ui.components.SeverityBadge
 import com.example.ui.components.StatusBadge
+import com.example.ui.components.resolveEvidenceState
 import com.example.ui.theme.ComplianceFail
 import com.example.ui.theme.CompliancePass
 import com.example.ui.theme.ComplianceReview
@@ -112,7 +118,7 @@ fun ComplianceResultsScreen(
         val currentInsp = inspection
         if (currentInsp != null) {
             ProductIntelligenceService.resolveProductIntelligence(
-                queryOrBarcode = currentInsp.productName,
+                queryOrBarcode = "${currentInsp.productName} ${currentInsp.brand}",
                 scannedDeclarations = declarations
             )
         } else null
@@ -258,7 +264,11 @@ fun ComplianceResultsScreen(
             ) {
                 item {
                     Spacer(modifier = Modifier.height(4.dp))
-                    InspectionSummaryHeaderCard(inspection = insp)
+                    InspectionComplianceSummaryCard(
+                        inspection = insp,
+                        checks = checks,
+                        onRuleClick = { onNavigateEvidence(inspectionId) }
+                    )
                 }
 
                 item {
@@ -266,14 +276,33 @@ fun ComplianceResultsScreen(
                 }
 
                 item {
-                    com.example.ui.components.BilingualImportedCheckerPanel()
+                    val originFromDecl = declarations.find { it.fieldName.contains("ORIGIN", true) || it.fieldKey.contains("ORIGIN", true) }?.extractedValue
+                        ?: productIntelReport?.manufacturer?.countryOfOrigin
+                    val importerFromDecl = declarations.find { it.fieldName.contains("IMPORTER", true) || it.fieldKey.contains("IMPORTER", true) }?.extractedValue
+                        ?: productIntelReport?.manufacturer?.importerName?.takeIf { !it.contains("Not Provided", true) }
+                    val iecFromDecl = declarations.find { it.fieldName.contains("IEC", true) || it.fieldKey.contains("IEC", true) || it.extractedValue.contains("IEC", true) }?.extractedValue
+                    val hasHindiText = declarations.any { decl -> decl.extractedValue.any { char -> char in '\u0900'..'\u097F' } } || (insp.reviewNotes.any { it in '\u0900'..'\u097F' })
+                    val hasEnglishText = declarations.any { decl -> decl.extractedValue.any { char -> char in 'A'..'Z' || char in 'a'..'z' } }
+                    val fssaiFromDecl = declarations.find { it.fieldName.contains("FSSAI", true) || it.fieldKey.contains("FSSAI", true) }?.extractedValue
+                        ?: productIntelReport?.manufacturer?.licenseNumber?.takeIf { !it.contains("Not Provided", true) }
+
+                    com.example.ui.components.BilingualImportedCheckerPanel(
+                        countryOfOrigin = originFromDecl,
+                        importerNameAddress = importerFromDecl,
+                        importerIecCode = iecFromDecl,
+                        bilingualEnglishFound = hasEnglishText,
+                        bilingualHindiFound = hasHindiText,
+                        fssaiImportLicense = fssaiFromDecl
+                    )
                 }
 
                 item {
-                    TabRow(
+                    androidx.compose.material3.ScrollableTabRow(
                         selectedTabIndex = selectedTabIndex,
                         containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = MaterialTheme.colorScheme.primary
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        edgePadding = 8.dp,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         tabs.forEachIndexed { index, title ->
                             Tab(
@@ -283,7 +312,9 @@ fun ComplianceResultsScreen(
                                     Text(
                                         text = title,
                                         fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal,
-                                        style = MaterialTheme.typography.labelMedium
+                                        style = MaterialTheme.typography.labelMedium,
+                                        maxLines = 1,
+                                        softWrap = false
                                     )
                                 }
                             )
@@ -607,20 +638,31 @@ private fun RuleFindingCard(
 
 @Composable
 private fun DeclarationChecklistItem(declaration: DeclarationEntity) {
-    val isMissing = declaration.extractedValue.isBlank() && declaration.correctedValue == null
+    val isMissing = (declaration.extractedValue.isBlank() ||
+            declaration.extractedValue.contains("Not Provided", ignoreCase = true) ||
+            declaration.extractedValue.contains("Not Detected", ignoreCase = true)) && declaration.correctedValue == null
+    val effectiveValue = when {
+        declaration.correctedValue != null -> declaration.correctedValue
+        !isMissing -> declaration.extractedValue
+        else -> "Detail Not Provided on Package"
+    }
+    val evidenceState = resolveEvidenceState(
+        value = effectiveValue,
+        defaultState = if (declaration.confidence >= 0.70f) EvidenceState.VERIFIED_PACKAGING else EvidenceState.AI_IDENTIFIED
+    )
 
     Card(
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isMissing) ComplianceFail.copy(alpha = 0.05f) else MaterialTheme.colorScheme.surface
+            containerColor = if (isMissing) ComplianceFail.copy(alpha = 0.04f) else MaterialTheme.colorScheme.surface
         ),
         border = BorderStroke(
             1.dp,
-            if (isMissing) ComplianceFail.copy(alpha = 0.4f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+            if (isMissing) ComplianceFail.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
         ),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -629,59 +671,65 @@ private fun DeclarationChecklistItem(declaration: DeclarationEntity) {
                 Text(
                     text = declaration.fieldName,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
-                Surface(
-                    color = if (isMissing) ComplianceFail.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(6.dp)
+                Spacer(modifier = Modifier.width(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text(
-                        text = if (isMissing) "NOT DETECTED" else "${(declaration.confidence * 100).toInt()}% OCR",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isMissing) ComplianceFail else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    EvidenceStateBadge(
+                        state = evidenceState,
+                        compact = true
                     )
+                    if (!isMissing) {
+                        OcrConfidenceBadge(
+                            confidence = declaration.confidence,
+                            compact = true,
+                            showLabel = false
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = when {
-                    declaration.correctedValue != null -> declaration.correctedValue
-                    declaration.extractedValue.isNotBlank() -> declaration.extractedValue
-                    else -> "Not Detected / Not Provided"
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (isMissing) FontWeight.Bold else FontWeight.Normal,
-                color = if (isMissing) ComplianceFail else MaterialTheme.colorScheme.onSurface
-            )
+            Surface(
+                color = if (isMissing) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f) else MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(8.dp),
+                border = if (!isMissing) BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)) else null,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = effectiveValue,
+                    style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 20.sp),
+                    fontWeight = if (isMissing) FontWeight.Normal else FontWeight.Medium,
+                    fontStyle = if (isMissing) androidx.compose.ui.text.font.FontStyle.Italic else androidx.compose.ui.text.font.FontStyle.Normal,
+                    color = if (isMissing) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                )
+            }
 
             if (isMissing) {
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
                     shape = RoundedCornerShape(6.dp),
-                    border = BorderStroke(1.dp, ComplianceFail.copy(alpha = 0.3f)),
+                    border = BorderStroke(0.5.dp, ComplianceFail.copy(alpha = 0.25f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(8.dp)) {
+                    Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
-                            text = "Why Missing: OCR camera scan detected no legible value for '${declaration.fieldName}' on package panels.",
+                            text = "Status: OCR camera scan detected no legible value for '${declaration.fieldName}' on package panels.",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 10.5.sp
                         )
                         Text(
                             text = "Statutory Rule: Mandatory declaration under Rule 6 of Legal Metrology (Packaged Commodities) Rules, 2011.",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "Suggested Corrective Action: Re-capture high-resolution photo of package panel or manually verify during Officer Review. Value is never fabricated.",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 10.5.sp
                         )
                     }
                 }
@@ -757,11 +805,29 @@ private fun InspectionMetaDetailCard(
 
 @Composable
 private fun DetailRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp)
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(text = value, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f, fill = false)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
     }
 }

@@ -76,8 +76,10 @@ fun ProcessingPipelineScreen(
             val inspection = viewModel.repository.getInspectionById(id).firstOrNull()
             if (inspection?.status == ComplianceStatus.POTENTIAL_NON_COMPLIANCE) {
                 com.example.utils.HapticFeedbackHelper.triggerComplianceError(context)
+                com.example.utils.AudioFeedbackHelper.playComplianceAlertSound(context)
             } else {
                 com.example.utils.HapticFeedbackHelper.triggerScanSuccess(context)
+                com.example.utils.AudioFeedbackHelper.playOcrSuccessSound(context)
             }
         }
     }
