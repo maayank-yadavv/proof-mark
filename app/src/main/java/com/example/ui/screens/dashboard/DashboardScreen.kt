@@ -94,6 +94,7 @@ import androidx.compose.material.icons.filled.Verified
 import com.example.ui.components.AnimatedPulseDot
 import com.example.ui.components.InspectionItemCard
 import com.example.ui.components.NetworkConnectivityIndicator
+import com.example.ui.components.ProofMarkBrandLogo
 import com.example.ui.components.ResponsiveContainer
 import com.example.ui.components.StatusBadge
 import com.example.ui.theme.ComplianceFail
@@ -137,25 +138,15 @@ fun DashboardScreen(
                             .padding(vertical = 4.dp, horizontal = 2.dp)
                             .testTag("top_left_brand_logo_area")
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFF4285F4).copy(alpha = 0.2f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = null,
-                                tint = Color(0xFF8AB4F8),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                        ProofMarkBrandLogo(
+                            size = 38.dp,
+                            withGlow = true
+                        )
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = if (isStandardUser) "Legal Metrology" else "Enforcement Terminal",
+                                    text = "Legal Metrology",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface,
@@ -164,15 +155,15 @@ fun DashboardScreen(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
-                                AnimatedPulseDot(color = Color(0xFF22C55E), size = 8.dp)
+                                AnimatedPulseDot(color = Color(0xFF00E676), size = 8.dp)
                             }
 
                             Text(
-                                text = if (isStandardUser) "Consumer Package Portal" else "Directorate Zone #3",
+                                text = if (isStandardUser) "Consumer Portal" else "Consumer & Enforcement Portal",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 10.sp,
+                                color = Color(0xFF00E676),
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp,
                                 maxLines = 1
                             )
                         }
@@ -621,10 +612,9 @@ fun HeroStartInspectionCard(
                 // Header Row with User / Officer details
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Default.Shield,
@@ -646,27 +636,16 @@ fun HeroStartInspectionCard(
                             text = if (isStandardUser) "Consumer Product Portal" else "Enforcement Officer Terminal",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = if (isStandardUser) "Verify mandatory declarations under LM (Packaged Commodities) Rules 2011" else "$jurisdiction • Badge #$badgeNumber",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF4285F4).copy(alpha = 0.2f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = null,
-                            tint = Color(0xFF8AB4F8),
-                            modifier = Modifier.size(26.dp)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -755,8 +734,12 @@ fun MetricSummaryCard(
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    letterSpacing = 0.5.sp
+                    letterSpacing = 0.5.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
+                Spacer(modifier = Modifier.width(4.dp))
                 Box(
                     modifier = Modifier
                         .size(34.dp)
@@ -776,12 +759,16 @@ fun MetricSummaryCard(
                 text = value,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -836,7 +823,10 @@ fun QuickToolChip(
                     text = label,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
             }
             Icon(

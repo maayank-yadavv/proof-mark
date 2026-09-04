@@ -1,73 +1,72 @@
-<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Optical Metrology Scanner Calibration Brackets (4 corners) -->
-    <!-- Top-Left Corner -->
+    <!-- Optical Metrology Scanner Corner Brackets (Neon Emerald) -->
+    <!-- Top-Left -->
     <path
-        android:pathData="M22,36 L22,25 C22,22 25,19 28,19 L39,19"
+        android:pathData="M18,34 L18,24 C18,20.7 20.7,18 24,18 L34,18"
         android:strokeColor="#00E676"
-        android:strokeWidth="3.5"
+        android:strokeWidth="4"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
 
-    <!-- Top-Right Corner -->
+    <!-- Top-Right -->
     <path
-        android:pathData="M69,19 L80,19 C83,19 86,22 86,25 L86,36"
+        android:pathData="M74,18 L84,18 C87.3,18 90,20.7 90,24 L90,34"
         android:strokeColor="#00E676"
-        android:strokeWidth="3.5"
+        android:strokeWidth="4"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
 
-    <!-- Bottom-Left Corner -->
+    <!-- Bottom-Left -->
     <path
-        android:pathData="M22,72 L22,83 C22,86 25,89 28,89 L39,89"
+        android:pathData="M18,74 L18,84 C18,87.3 20.7,90 24,90 L34,90"
         android:strokeColor="#00E676"
-        android:strokeWidth="3.5"
+        android:strokeWidth="4"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
 
-    <!-- Bottom-Right Corner -->
+    <!-- Bottom-Right -->
     <path
-        android:pathData="M69,89 L80,89 C83,89 86,86 86,83 L86,72"
+        android:pathData="M74,90 L84,90 C87.3,90 90,87.3 90,84 L90,74"
         android:strokeColor="#00E676"
-        android:strokeWidth="3.5"
+        android:strokeWidth="4"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
 
-    <!-- Shield Face (Dark Metallic Midnight Slate Inset) -->
+    <!-- Shield Body Fill (Dark Midnight Emerald) -->
     <path
         android:pathData="M54,26 C72,26 80,33 80,45 C80,63 57,79 54,82 C51,79 28,63 28,45 C28,33 36,26 54,26 Z"
         android:fillColor="#06180E" />
 
-    <!-- Shield Outline (Vibrant Neon Emerald) -->
+    <!-- Shield Border Outline (Vibrant Neon Emerald) -->
     <path
         android:pathData="M54,26 C72,26 80,33 80,45 C80,63 57,79 54,82 C51,79 28,63 28,45 C28,33 36,26 54,26 Z"
         android:strokeColor="#00E676"
-        android:strokeWidth="3.8"
+        android:strokeWidth="4"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
 
     <!-- Sun / Amber Verification Dot -->
     <path
-        android:pathData="M54,36 m-3.2,0 a3.2,3.2 0 1,1 6.4,0 a3.2,3.2 0 1,1 -6.4,0"
+        android:pathData="M54,35 A4.5,4.5 0 1,1 53.99,35 Z"
         android:fillColor="#FFB300" />
 
-    <!-- Horizontal Metrology Scanner Line -->
+    <!-- Horizontal Scan Line -->
     <path
-        android:pathData="M39,53 L69,53"
+        android:pathData="M38,55 L70,55"
         android:strokeColor="#00897B"
-        android:strokeWidth="2.2"
+        android:strokeWidth="2.5"
         android:strokeLineCap="round" />
 
-    <!-- Bold Precision Verification Checkmark (Vibrant Emerald) -->
+    <!-- Bold Verified Checkmark -->
     <path
-        android:pathData="M44,53 L51,62 L66,43"
+        android:pathData="M43,55 L51,64 L67,44"
         android:strokeColor="#00E676"
-        android:strokeWidth="4.8"
+        android:strokeWidth="5.5"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
 

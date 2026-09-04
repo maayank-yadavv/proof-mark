@@ -185,6 +185,7 @@ import com.example.ui.components.NetworkConnectivityIndicator
 import com.example.ui.components.OcrConfidenceBadge
 import com.example.ui.components.OcrConfidenceOverlay
 import com.example.ui.components.ProofMarkLogoBadge
+import com.example.ui.components.ProofMarkBrandLogo
 import com.example.ui.components.ShimmerImagePreviewSkeleton
 import com.example.ui.components.ShimmerTextExtractionSkeleton
 import com.example.ui.components.getOcrReliabilityLevel
@@ -658,6 +659,11 @@ fun CameraScreen(
                         modifier = Modifier.padding(end = 8.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            ProofMarkBrandLogo(
+                                size = 28.dp,
+                                withGlow = true
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "Package Label Scanner",
                                 style = MaterialTheme.typography.titleMedium,

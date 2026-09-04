@@ -85,7 +85,7 @@ class InspectionRepository(private val db: AppDatabase) {
                     passwordHash = "password123",
                     phone = "+91 98000 11223",
                     stationJurisdiction = "Consumer Package Verification",
-                    isCurrentSession = false
+                    isCurrentSession = true
                 ),
                 UserEntity(
                     id = "usr_1",

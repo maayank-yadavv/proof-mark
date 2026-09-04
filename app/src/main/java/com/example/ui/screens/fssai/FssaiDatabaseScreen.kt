@@ -77,6 +77,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.draw.clip
+import com.example.ui.components.ProofMarkBrandLogo
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -180,23 +187,49 @@ fun FssaiDatabaseScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "FSSAI Food Safety Register",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Food Safety & Standards Authority of India Database",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 11.sp
+                navigationIcon = {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.testTag("fssai_back_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 },
+                title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        ProofMarkBrandLogo(
+                            size = 34.dp,
+                            withGlow = true
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column(modifier = Modifier.weight(1f, fill = false)) {
+                            Text(
+                                text = "FSSAI Safety Register",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = "Food Safety & Standards Database",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                },
                 actions = {
-                    androidx.compose.material3.IconButton(
+                    IconButton(
                         onClick = {
                             selectedFoscosLicenseNo = "10012021000071"
                             showFoscosBridgeDialog = true
@@ -209,7 +242,7 @@ fun FssaiDatabaseScreen(
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
-                    androidx.compose.material3.IconButton(
+                    IconButton(
                         onClick = { showQrScannerDialog = true },
                         modifier = Modifier.testTag("fssai_topbar_qr_scan_button")
                     ) {
@@ -219,11 +252,6 @@ fun FssaiDatabaseScreen(
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
-                    NetworkConnectivityIndicator(
-                        networkState = networkState,
-                        onToggleConnectivity = { viewModel.toggleNetworkConnectivity() },
-                        onTriggerPing = { viewModel.triggerNetworkPingCheck() }
-                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -255,35 +283,53 @@ fun FssaiDatabaseScreen(
             // 1. Header Banner & Summary Stats
             item {
                 Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
                     shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Security,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Security,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                             Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = "FSSAI License Verification Engine",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "FSSAI License Verification Engine",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = "FSS Act 2006 & Legal Metrology Rules 2011",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
-                            text = "Under the FSS Act 2006 & Legal Metrology Rules 2011, all pre-packaged food items must display a valid 14-digit FSSAI License number. Verified locally via Room DB.",
+                            text = "All pre-packaged food commodities must display a verified 14-digit FSSAI license number. Verified against central standards database.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -291,7 +337,7 @@ fun FssaiDatabaseScreen(
                         // Stats Grid
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             StatCard(
                                 label = "Total Entries",
@@ -299,21 +345,18 @@ fun FssaiDatabaseScreen(
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.weight(1f)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
                             StatCard(
                                 label = "Active",
                                 value = activeCount.toString(),
                                 color = Color(0xFF10B981),
                                 modifier = Modifier.weight(1f)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
                             StatCard(
                                 label = "Non-Compliant",
                                 value = expiredCount.toString(),
                                 color = Color(0xFFEF4444),
                                 modifier = Modifier.weight(1f)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
                             StatCard(
                                 label = "+F Fortified",
                                 value = fortifiedCount.toString(),
@@ -348,40 +391,70 @@ fun FssaiDatabaseScreen(
             item {
                 Card(
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                        containerColor = MaterialTheme.colorScheme.surface
                     ),
                     shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("fssai_verification_card")
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Header Row: Badge Icon + Title + Scan QR Button
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Verified,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Instant 14-Digit FSSAI License Lookup",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold
-                                )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Verified,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = "Instant 14-Digit License Lookup",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        text = "Verify registration status in real-time",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                             }
 
-                            androidx.compose.material3.OutlinedButton(
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            OutlinedButton(
                                 onClick = { showQrScannerDialog = true },
                                 shape = RoundedCornerShape(10.dp),
                                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                                 modifier = Modifier.testTag("fssai_verify_card_qr_button")
                             ) {
                                 Icon(
@@ -395,13 +468,13 @@ fun FssaiDatabaseScreen(
                                     text = "Scan QR",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = MaterialTheme.colorScheme.primary,
+                                    maxLines = 1
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(10.dp))
-
+                        // Input and Verify Row
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
@@ -412,12 +485,16 @@ fun FssaiDatabaseScreen(
                                     verifyNumberInput = it
                                     hasPerformedVerification = false
                                 },
-                                label = { Text("Enter 14-Digit FSSAI No.") },
+                                label = { Text("14-Digit License #") },
                                 placeholder = { Text("e.g. 10012021000071") },
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 leadingIcon = {
-                                    Icon(Icons.Default.QrCode, contentDescription = null)
+                                    Icon(
+                                        Icons.Default.QrCode,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 },
                                 trailingIcon = {
                                     if (verifyNumberInput.isNotEmpty()) {
@@ -429,12 +506,13 @@ fun FssaiDatabaseScreen(
                                         }
                                     }
                                 },
+                                shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
                                     .weight(1f)
                                     .testTag("fssai_verify_input")
                             )
 
-                            Spacer(modifier = Modifier.width(10.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
 
                             Button(
                                 onClick = {
@@ -447,79 +525,179 @@ fun FssaiDatabaseScreen(
                                 },
                                 enabled = verifyNumberInput.isNotBlank(),
                                 shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 16.dp),
                                 modifier = Modifier
-                                    .height(56.dp)
+                                    .height(54.dp)
                                     .testTag("fssai_verify_button")
                             ) {
-                                Text("Verify")
+                                Text(
+                                    text = "Verify",
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1
+                                )
                             }
                         }
 
                         // Verification Result Box
                         AnimatedVisibility(visible = hasPerformedVerification) {
-                            Spacer(modifier = Modifier.height(12.dp))
                             val result = verificationResult
                             if (result != null) {
                                 val isOk = result.status == "ACTIVE"
+                                val accent = if (isOk) Color(0xFF10B981) else Color(0xFFEF4444)
                                 Surface(
-                                    color = if (isOk) Color(0xFF064E3B) else Color(0xFF450A0A),
+                                    color = accent.copy(alpha = 0.08f),
                                     shape = RoundedCornerShape(12.dp),
-                                    border = BorderStroke(1.dp, if (isOk) Color(0xFF10B981) else Color(0xFFEF4444)),
+                                    border = BorderStroke(1.dp, accent.copy(alpha = 0.4f)),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Column(modifier = Modifier.padding(14.dp)) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                imageVector = if (isOk) Icons.Default.CheckCircle else Icons.Default.Warning,
-                                                contentDescription = null,
-                                                tint = if (isOk) Color(0xFF10B981) else Color(0xFFEF4444),
-                                                modifier = Modifier.size(22.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text(
-                                                text = if (isOk) "VALID & ACTIVE FSSAI LICENSE" else "NON-COMPLIANT LICENSE STATUS: ${result.status}",
-                                                style = MaterialTheme.typography.titleSmall,
-                                                fontWeight = FontWeight.Bold,
-                                                color = Color.White
-                                            )
+                                    Column(
+                                        modifier = Modifier.padding(14.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (isOk) Icons.Default.CheckCircle else Icons.Default.Warning,
+                                                    contentDescription = null,
+                                                    tint = accent,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    text = if (isOk) "VALID & ACTIVE LICENSE" else "NON-COMPLIANT STATUS",
+                                                    style = MaterialTheme.typography.labelLarge,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = accent,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                            Surface(
+                                                color = accent.copy(alpha = 0.15f),
+                                                shape = RoundedCornerShape(6.dp)
+                                            ) {
+                                                Text(
+                                                    text = result.status,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = accent,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                                    maxLines = 1
+                                                )
+                                            }
                                         }
 
-                                        Spacer(modifier = Modifier.height(6.dp))
-
                                         Text(
-                                            text = "Company: ${result.companyName}",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = Color.White
+                                            text = result.companyName,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
                                         )
 
-                                        Text(
-                                            text = "Type: ${result.licenseType} | State: ${result.state}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = Color.White.copy(alpha = 0.8f)
-                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = "License Type",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 1
+                                                )
+                                                Text(
+                                                    text = result.licenseType,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = "State Jurisdiction",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 1
+                                                )
+                                                Text(
+                                                    text = result.state,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                        }
 
-                                        Text(
-                                            text = "Expiry Date: ${result.expiryDate} | Fortified (+F): ${if (result.isFortifiedCertified) "YES" else "NO"}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = Color.White.copy(alpha = 0.8f)
-                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = "Expiry Date",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 1
+                                                )
+                                                Text(
+                                                    text = result.expiryDate,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    maxLines = 1
+                                                )
+                                            }
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = "Fortified (+F)",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 1
+                                                )
+                                                Text(
+                                                    text = if (result.isFortifiedCertified) "Yes (Certified)" else "No",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = if (result.isFortifiedCertified) Color(0xFFF59E0B) else MaterialTheme.colorScheme.onSurface,
+                                                    maxLines = 1
+                                                )
+                                            }
+                                        }
 
-                                        Spacer(modifier = Modifier.height(4.dp))
-
-                                        Text(
-                                            text = result.remarks,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = if (isOk) Color(0xFFA7F3D0) else Color(0xFFFCA5A5),
-                                            fontSize = 11.sp
-                                        )
+                                        if (result.remarks.isNotBlank()) {
+                                            Surface(
+                                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                                shape = RoundedCornerShape(8.dp),
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                Text(
+                                                    text = result.remarks,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    modifier = Modifier.padding(8.dp)
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             } else {
                                 Surface(
-                                    color = Color(0xFF450A0A),
+                                    color = Color(0xFFEF4444).copy(alpha = 0.08f),
                                     shape = RoundedCornerShape(12.dp),
-                                    border = BorderStroke(1.dp, Color(0xFFEF4444)),
+                                    border = BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.35f)),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Row(
@@ -535,16 +713,17 @@ fun FssaiDatabaseScreen(
                                         Spacer(modifier = Modifier.width(10.dp))
                                         Column {
                                             Text(
-                                                text = "UNREGISTERED / INVALID FSSAI NUMBER",
+                                                text = "UNREGISTERED / INVALID LICENSE",
                                                 style = MaterialTheme.typography.titleSmall,
                                                 fontWeight = FontWeight.Bold,
-                                                color = Color.White
+                                                color = Color(0xFFEF4444),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
                                             )
                                             Text(
-                                                text = "No FSSAI license entry found for '$verifyNumberInput' in the official database register.",
+                                                text = "No FSSAI record found for '$verifyNumberInput' in the register.",
                                                 style = MaterialTheme.typography.bodySmall,
-                                                color = Color.White.copy(alpha = 0.8f),
-                                                fontSize = 11.sp
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                     }
@@ -841,11 +1020,12 @@ private fun FssaiLicenseCard(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "BACKGROUND CHECK FLAG: Expiring in ${daysRemaining ?: 0} Days (Expiry: ${license.expiryDate})",
+                            text = "AUTOMATED CHECK: Expiring in ${daysRemaining ?: 0} Days (Expiry: ${license.expiryDate})",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFF59E0B),
-                            fontSize = 11.sp
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -1077,8 +1257,7 @@ private fun FssaiLicenseCard(
                                     Text(
                                         text = "License expires in ${daysRemaining ?: 0} days on ${license.expiryDate}. Pursuant to FSS Rule 2.1.7, Food Business Operators must submit Form B renewal prior to 30 days of expiry on FoSCoS to avoid Rs. 100/day late penalty fee.",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontSize = 11.sp
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
                             }
@@ -1329,13 +1508,18 @@ private fun StatCard(
                 text = value,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = color
+                color = color,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 10.sp
+                fontSize = 10.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -1993,19 +2177,20 @@ private fun FssaiSyncStatusIndicator(
                             text = statusTitle,
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = if (isFullySynced) {
-                                "Remote Gateway (api.fssai.gov.in) • Last sync: $formattedTime"
+                                "Remote Gateway • Last sync: $formattedTime"
                             } else if (pendingFssaiCount > 0) {
-                                "$pendingFssaiCount local updates queued for remote API sync"
+                                "$pendingFssaiCount local updates queued for sync"
                             } else {
-                                "Operating on local Room DB cache. Auto-syncs when online."
+                                "Operating on local cache. Auto-syncs when online."
                             },
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 11.sp
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -2022,7 +2207,6 @@ private fun FssaiSyncStatusIndicator(
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = statusBadgeColor,
-                        fontSize = 10.sp,
                         modifier = Modifier
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                             .testTag("fssai_sync_badge")
@@ -2038,21 +2222,23 @@ private fun FssaiSyncStatusIndicator(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f, fill = false)) {
                     Text(
                         text = "Remote API Endpoint",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 10.sp
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "https://api.fssai.gov.in/v2/licenses",
+                        text = "api.fssai.gov.in/v2/licenses",
                         style = MaterialTheme.typography.bodySmall,
-                        fontFamily = com.example.ui.theme.AppFontFamily,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
-                        fontSize = 11.sp
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 OutlinedButton(
                     onClick = onTriggerSync,
@@ -2061,6 +2247,7 @@ private fun FssaiSyncStatusIndicator(
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.primary
                     ),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                     modifier = Modifier.testTag("trigger_remote_fssai_sync_button")
                 ) {
                     Icon(
@@ -2070,8 +2257,8 @@ private fun FssaiSyncStatusIndicator(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (isSyncing) "Syncing..." else "Sync Remote API",
-                        fontSize = 12.sp,
+                        text = if (isSyncing) "Syncing..." else "Sync Now",
+                        style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -2087,55 +2274,116 @@ private fun FssaiExpiringSoonAlertBanner(
     modifier: Modifier = Modifier
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF451A03).copy(alpha = 0.35f)),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, Color(0xFFF59E0B)),
+        border = BorderStroke(1.dp, Color(0xFFF59E0B).copy(alpha = 0.45f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = modifier
             .fillMaxWidth()
             .testTag("fssai_expiring_soon_alert_card")
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Warning,
-                    contentDescription = null,
-                    tint = Color(0xFFF59E0B),
-                    modifier = Modifier.size(22.dp)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = "Automated Background Check Flag",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFF59E0B)
-                )
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f, fill = false)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFFF59E0B).copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = Color(0xFFF59E0B),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "Automated Background Check",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "Statutory Expiry Monitoring Flag",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFFF59E0B),
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                Surface(
+                    color = Color(0xFFF59E0B).copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, Color(0xFFF59E0B).copy(alpha = 0.35f))
+                ) {
+                    Text(
+                        text = "${expiringLicenses.size} EXPIRING",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFF59E0B),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        maxLines = 1
+                    )
+                }
             }
-            Spacer(modifier = Modifier.height(6.dp))
+
             Text(
-                text = "${expiringLicenses.size} license record(s) expire within the mandatory 30-day renewal window (FSS Rule 2.1.7). Food business operators must submit Form B on FoSCoS.",
+                text = "${expiringLicenses.size} food business license record(s) expire within the mandatory 30-day renewal window (FSS Rule 2.1.7). Operators must submit renewal Form B on FoSCoS.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 12.sp
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(10.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Urgent Renewal Compliance Action",
+                    text = "Renewal compliance required",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 11.sp
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
+                Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = onFilterExpiringSoon,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFF59E0B),
+                        contentColor = Color.Black
+                    ),
                     shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
                     modifier = Modifier.testTag("view_expiring_licenses_button")
                 ) {
-                    Text("Filter Expiring (${expiringLicenses.size})", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text(
+                        text = "View Records (${expiringLicenses.size})",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1
+                    )
                 }
             }
         }

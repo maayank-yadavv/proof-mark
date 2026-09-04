@@ -86,20 +86,20 @@ class InspectionViewModel(application: Application) : AndroidViewModel(applicati
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
-    // Current Officer Profile
+    // Current Profile (Default: Consumer Packaging Portal)
     private val _currentUser = MutableStateFlow(
         UserEntity(
-            id = "usr_1",
-            name = "Insp. Rajesh Kumar",
-            email = "rajesh.kumar@metrology.gov.in",
-            badgeNumber = "LM-DEL-8942",
-            role = UserRole.ENFORCEMENT_OFFICER,
-            department = "Field Enforcement Directorate",
-            avatarColorHex = "#0284C7",
+            id = "usr_0",
+            name = "Aman Sharma",
+            email = "user@proofmark.app",
+            badgeNumber = "USR-DAY-1001",
+            role = UserRole.STANDARD_USER,
+            department = "Consumer & Retail Package Verification",
+            avatarColorHex = "#10B981",
             pin = "123456",
             passwordHash = "password123",
-            phone = "+91 98112 34567",
-            stationJurisdiction = "Delhi North-West Field Station",
+            phone = "+91 98000 11223",
+            stationJurisdiction = "Consumer Package Verification",
             isCurrentSession = true
         )
     )
